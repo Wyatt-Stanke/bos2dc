@@ -1,0 +1,24 @@
+[project]
+name = "bos2dc"
+version = "0.1.0"
+description = "Find the most frequency-robust Boston South Station -> DC Union Station route using only local fixed-fare buses"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.24",
+    "pandas>=2.0",
+    "scipy>=1.10",
+    "requests>=2.28",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+[project.scripts]
+bos2dc = "bos2dc.cli:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["bos2dc"]
