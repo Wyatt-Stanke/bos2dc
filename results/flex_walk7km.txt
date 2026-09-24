@@ -182,9 +182,9 @@ MOST LOCAL at the same weakest-link frequency
   weakest link: effective headway 3h07m · longest walk 7.0 km
   56 boardings · in-vehicle 36h43m · walking 5h00m · expected waiting 27h39m · frequency-based trip time 69h23m
   road type: 1 lane 312 mi (47%) · 2 lanes 257 mi (39%) · 3+ lanes 58 mi (9%) · controlled access 20 mi (3%) · flex 18 mi (3%)
-  timetable check (same weekday timetable every day): 2 distinct connections per day; door-to-door 92h18m fastest, 92h20m median
-    leave South Station by 12:36 → Union Station 08:58 (+4d)  (92h22m)
-    leave South Station by 22:35 → Union Station 18:53 (+4d)  (92h18m)
+  timetable check (same weekday timetable every day): 2 distinct connections per day; door-to-door 81h05m fastest, 86h22m median
+    leave South Station by 12:36 → Union Station 21:41 (+3d)  (81h05m)
+    leave South Station by 22:35 → Union Station 18:13 (+4d)  (91h38m)
 
    1. walk 754 m (13m) → Washington St @ Tufts Med Ctr
    2. MBTA SL5 Nubian Station - Temple Place (101), MBTA SL4 Nubian Station - South Station (75)
@@ -413,9 +413,9 @@ MOST LOCAL at any frequency
   weakest link: effective headway 3h30m · longest walk 7.0 km
   53 boardings · in-vehicle 35h34m · walking 4h46m · expected waiting 27h37m · frequency-based trip time 67h59m
   road type: 1 lane 301 mi (48%) · 2 lanes 241 mi (38%) · 3+ lanes 55 mi (9%) · controlled access 18 mi (3%) · flex 18 mi (3%)
-  timetable check (same weekday timetable every day): 2 distinct connections per day; door-to-door 89h57m fastest, 91h10m median
-    leave South Station by 00:56 → Union Station 18:53 (+3d)  (89h57m)
-    leave South Station by 12:36 → Union Station 08:58 (+4d)  (92h22m)
+  timetable check (same weekday timetable every day): 2 distinct connections per day; door-to-door 81h05m fastest, 85h11m median
+    leave South Station by 00:56 → Union Station 18:13 (+3d)  (89h17m)
+    leave South Station by 12:36 → Union Station 21:41 (+3d)  (81h05m)
 
    1. walk 754 m (13m) → Washington St @ Tufts Med Ctr
    2. MBTA SL5 Nubian Station - Temple Place (101), MBTA SL4 Nubian Station - South Station (75)
@@ -631,8 +631,8 @@ SUMMARY
   route                                     weakest boards  longest  1-ln  2-ln  3+ln    CA  flex  exp.time  fastest
                                             headway            walk    mi    mi    mi    mi    mi               (tt)
   RECOMMENDED                                 3h07m     42    7.0km   246   213    68   106    19    57h42m   71h42m
-  MOST LOCAL at the same weakest-link freq    3h07m     56    7.0km   312   257    58    20    18    69h23m   92h18m
-  MOST LOCAL at any frequency                 3h30m     53    7.0km   301   241    55    18    18    67h59m   89h57m
+  MOST LOCAL at the same weakest-link freq    3h07m     56    7.0km   312   257    58    20    18    69h23m   81h05m
+  MOST LOCAL at any frequency                 3h30m     53    7.0km   301   241    55    18    18    67h59m   81h05m
 
 RECOMMENDED — leaving South Station at 07:00:
           07:00–07:01         walk to Essex St @ Atlantic Ave
@@ -729,20 +729,19 @@ RECOMMENDED — leaving South Station at 07:00:
     06:35 (+3d)–06:56 (+3d)   Harford Transit LINK 5 Teal toward Outbound
                               wait 34m
     07:30 (+3d)–08:07 (+3d)   Harford Transit LINK 3 Silver toward Westbound
-                              wait 1h38m
-    09:45 (+3d)–09:57 (+3d)   Harford Transit LINK 3 Silver toward Westbound
-    09:57 (+3d)–11:59 (+3d)   walk to EASTERN AVE & BISCAYNE BAY BLVD fs
-                              wait 27m
-    12:26 (+3d)–12:59 (+3d)   Maryland Transit Administration 59 Moravia - Whispering Woods toward MORAVIA
-                              wait 11m
-    13:10 (+3d)–13:31 (+3d)   Maryland Transit Administration 40 CMS - Essex toward CMS
-                              wait 20m
-    13:51 (+3d)–14:36 (+3d)   Maryland Transit Administration CityLink PURPLE City Hall - Paradise/Catonsville toward CATONSVILLE
-    14:36 (+3d)–14:36 (+3d)   walk to Walmart at Catonsville
+    08:07 (+3d)–08:27 (+3d)   Harford Transit LINK 3 Silver toward Westbound
+    08:27 (+3d)–10:29 (+3d)   walk to EASTERN AVE & BISCAYNE BAY BLVD fs
+                              wait 52m
+    11:21 (+3d)–11:54 (+3d)   Maryland Transit Administration 59 Moravia - Whispering Woods toward MORAVIA
+                              wait 7m
+    12:01 (+3d)–12:22 (+3d)   Maryland Transit Administration 40 CMS - Essex toward CMS
+                              wait 29m
+    12:51 (+3d)–13:36 (+3d)   Maryland Transit Administration CityLink PURPLE City Hall - Paradise/Catonsville toward CATONSVILLE
+    13:36 (+3d)–13:36 (+3d)   walk to Walmart at Catonsville
                               wait 23m
-    15:00 (+3d)–15:45 (+3d)   Regional Transportation Agency of Central Maryland 505 Columbia / Catonsville toward Mall in Columbia
-    15:45 (+3d)–15:48 (+3d)   walk to COLUMBIA MALL & SOUTH RING RD eb
-                              wait 12h41m
+    14:00 (+3d)–14:45 (+3d)   Regional Transportation Agency of Central Maryland 505 Columbia / Catonsville toward Mall in Columbia
+    14:45 (+3d)–14:48 (+3d)   walk to COLUMBIA MALL & SOUTH RING RD eb
+                              wait 13h41m
     04:30 (+4d)–05:32 (+4d)   Maryland Transit Administration 305 COLUMBIA & SILVER SPRING - DC toward 305/1 WASHINGTON DC
     05:32 (+4d)–05:33 (+4d)   walk to 16 St NW+Aspen St NW
                               wait 5m
@@ -880,38 +879,37 @@ MOST LOCAL at the same weakest-link frequency — leaving South Station at 07:00
     10:05 (+3d)–10:43 (+3d)   Harford Transit LINK 5 Teal toward Outbound
                               wait 17m
     11:00 (+3d)–11:37 (+3d)   Harford Transit LINK 3 Silver toward Westbound
-                              wait 1h00m
-    12:37 (+3d)–12:57 (+3d)   Harford Transit LINK 3 Silver toward Westbound
-    12:57 (+3d)–14:59 (+3d)   walk to EASTERN AVE & BISCAYNE BAY BLVD fs
-                              wait 27m
-    15:26 (+3d)–16:03 (+3d)   Maryland Transit Administration 59 Moravia - Whispering Woods toward MORAVIA
-                              wait 3m
-    16:06 (+3d)–16:30 (+3d)   Maryland Transit Administration CityLink ORANGE Essex - West Baltimore MARC toward W BALTIMORE MARC
-    16:30 (+3d)–16:31 (+3d)   walk to SAINT PAUL ST & FAYETTE ST fs sb
-                              wait 11m
-    16:42 (+3d)–17:03 (+3d)   Maryland Transit Administration CityLink SILVER Curtis Bay - Hopkins/Morgan State toward CURTIS BAY
-    17:03 (+3d)–17:05 (+3d)   walk to PATAPSCO AVE & POTEE ST mb eb
-                              wait 29m
-    17:34 (+3d)–17:51 (+3d)   Maryland Transit Administration 70 Patapsco Station - Annapolis toward ANNAPOLIS
-    17:51 (+3d)–17:51 (+3d)   walk to Glen Burnie Light Rail Station
-                              wait 39m
-    18:31 (+3d)–18:54 (+3d)   Anne Arundel County Office of Transportation 201 Arundel Mills - Lake Shore
-    18:54 (+3d)–18:54 (+3d)   walk to Arundel Mills Mall
-                              wait 11h05m
-    06:00 (+4d)–06:15 (+4d)   Regional Transportation Agency of Central Maryland 502 Laurel / Arundel Mills toward Towne Centre Laurel
-                              wait 17m
-    06:32 (+4d)–06:46 (+4d)   Regional Transportation Agency of Central Maryland 409 Elkridge Corners toward Towne Centre Laurel
-    06:46 (+4d)–06:46 (+4d)   walk to 4 St+Montrose Av
-                              wait 13m
-    07:00 (+4d)–07:23 (+4d)   WMATA P12 Laurel-Greenbelt toward South to Greenbelt
-    07:23 (+4d)–07:36 (+4d)   walk to Baltimore Av+Ikea Center Bl
+    11:37 (+3d)–11:57 (+3d)   Harford Transit LINK 3 Silver toward Westbound
+    11:57 (+3d)–13:59 (+3d)   walk to EASTERN AVE & BISCAYNE BAY BLVD fs
+                              wait 37m
+    14:36 (+3d)–15:13 (+3d)   Maryland Transit Administration 59 Moravia - Whispering Woods toward MORAVIA
+                              wait 5m
+    15:18 (+3d)–15:43 (+3d)   Maryland Transit Administration 40 CMS - Essex toward CMS
+    15:43 (+3d)–15:43 (+3d)   walk to SAINT PAUL ST & FAYETTE ST fs sb
                               wait 2m
-    07:38 (+4d)–08:16 (+4d)   WMATA P1X Baltimore Av Limited toward South to Rhode Island Av
-    08:16 (+4d)–08:17 (+4d)   walk to 18 St NE+Hamlin St NE
-                              wait 4m
-    08:22 (+4d)–08:56 (+4d)   WMATA C71 18 St toward South to Union Station
-    08:56 (+4d)–08:58 (+4d)   walk to Washington Union Station
-  arrive Union Station 08:58 (+4d) (97h58m door to door)
+    15:46 (+3d)–16:06 (+3d)   Maryland Transit Administration CityLink SILVER Curtis Bay - Hopkins/Morgan State toward CURTIS BAY
+    16:06 (+3d)–16:08 (+3d)   walk to PATAPSCO AVE & POTEE ST mb eb
+                              wait 8m
+    16:16 (+3d)–16:37 (+3d)   Maryland Transit Administration 69 Patapsco Station - Jumpers Hole toward JUMPERS HOLE
+    16:37 (+3d)–16:37 (+3d)   walk to Glen Burnie Light Rail Station
+                              wait 53m
+    17:31 (+3d)–17:54 (+3d)   Anne Arundel County Office of Transportation 201 Arundel Mills - Lake Shore
+    17:54 (+3d)–17:54 (+3d)   walk to Arundel Mills Mall
+                              wait 5m
+    18:00 (+3d)–18:15 (+3d)   Regional Transportation Agency of Central Maryland 502 Laurel / Arundel Mills toward Towne Centre Laurel
+                              wait 17m
+    18:32 (+3d)–18:46 (+3d)   Regional Transportation Agency of Central Maryland 409 Elkridge Corners toward Towne Centre Laurel
+    18:46 (+3d)–18:46 (+3d)   walk to 4 St+Montrose Av
+                              wait 39m
+    19:25 (+3d)–19:49 (+3d)   WMATA P12 Laurel-Greenbelt toward South to Greenbelt
+    19:49 (+3d)–20:02 (+3d)   walk to Baltimore Av+Ikea Center Bl
+                              wait 16m
+    20:18 (+3d)–20:55 (+3d)   WMATA P1X Baltimore Av Limited toward South to Rhode Island Av
+    20:55 (+3d)–20:56 (+3d)   walk to 18 St NE+Hamlin St NE
+                              wait 19m
+    21:16 (+3d)–21:39 (+3d)   WMATA C71 18 St toward South to Union Station
+    21:39 (+3d)–21:41 (+3d)   walk to Washington Union Station
+  arrive Union Station 21:41 (+3d) (86h41m door to door)
 
 MOST LOCAL at any frequency — leaving South Station at 07:00:
           07:00–07:13         walk to Washington St @ Tufts Med Ctr
@@ -1030,35 +1028,34 @@ MOST LOCAL at any frequency — leaving South Station at 07:00:
     10:05 (+3d)–10:43 (+3d)   Harford Transit LINK 5 Teal toward Outbound
                               wait 17m
     11:00 (+3d)–11:37 (+3d)   Harford Transit LINK 3 Silver toward Westbound
-                              wait 1h00m
-    12:37 (+3d)–12:57 (+3d)   Harford Transit LINK 3 Silver toward Westbound
-    12:57 (+3d)–14:59 (+3d)   walk to EASTERN AVE & BISCAYNE BAY BLVD fs
-                              wait 27m
-    15:26 (+3d)–16:03 (+3d)   Maryland Transit Administration 59 Moravia - Whispering Woods toward MORAVIA
-                              wait 3m
-    16:06 (+3d)–16:30 (+3d)   Maryland Transit Administration CityLink ORANGE Essex - West Baltimore MARC toward W BALTIMORE MARC
-    16:30 (+3d)–16:31 (+3d)   walk to SAINT PAUL ST & FAYETTE ST fs sb
-                              wait 11m
-    16:42 (+3d)–17:03 (+3d)   Maryland Transit Administration CityLink SILVER Curtis Bay - Hopkins/Morgan State toward CURTIS BAY
-    17:03 (+3d)–17:05 (+3d)   walk to PATAPSCO AVE & POTEE ST mb eb
-                              wait 29m
-    17:34 (+3d)–17:51 (+3d)   Maryland Transit Administration 70 Patapsco Station - Annapolis toward ANNAPOLIS
-    17:51 (+3d)–17:51 (+3d)   walk to Glen Burnie Light Rail Station
-                              wait 39m
-    18:31 (+3d)–18:54 (+3d)   Anne Arundel County Office of Transportation 201 Arundel Mills - Lake Shore
-    18:54 (+3d)–18:54 (+3d)   walk to Arundel Mills Mall
-                              wait 11h05m
-    06:00 (+4d)–06:15 (+4d)   Regional Transportation Agency of Central Maryland 502 Laurel / Arundel Mills toward Towne Centre Laurel
-                              wait 17m
-    06:32 (+4d)–06:46 (+4d)   Regional Transportation Agency of Central Maryland 409 Elkridge Corners toward Towne Centre Laurel
-    06:46 (+4d)–06:46 (+4d)   walk to 4 St+Montrose Av
-                              wait 13m
-    07:00 (+4d)–07:23 (+4d)   WMATA P12 Laurel-Greenbelt toward South to Greenbelt
-    07:23 (+4d)–07:36 (+4d)   walk to Baltimore Av+Ikea Center Bl
+    11:37 (+3d)–11:57 (+3d)   Harford Transit LINK 3 Silver toward Westbound
+    11:57 (+3d)–13:59 (+3d)   walk to EASTERN AVE & BISCAYNE BAY BLVD fs
+                              wait 37m
+    14:36 (+3d)–15:13 (+3d)   Maryland Transit Administration 59 Moravia - Whispering Woods toward MORAVIA
+                              wait 5m
+    15:18 (+3d)–15:43 (+3d)   Maryland Transit Administration 40 CMS - Essex toward CMS
+    15:43 (+3d)–15:43 (+3d)   walk to SAINT PAUL ST & FAYETTE ST fs sb
                               wait 2m
-    07:38 (+4d)–08:16 (+4d)   WMATA P1X Baltimore Av Limited toward South to Rhode Island Av
-    08:16 (+4d)–08:17 (+4d)   walk to 18 St NE+Hamlin St NE
-                              wait 4m
-    08:22 (+4d)–08:56 (+4d)   WMATA C71 18 St toward South to Union Station
-    08:56 (+4d)–08:58 (+4d)   walk to Washington Union Station
-  arrive Union Station 08:58 (+4d) (97h58m door to door)
+    15:46 (+3d)–16:06 (+3d)   Maryland Transit Administration CityLink SILVER Curtis Bay - Hopkins/Morgan State toward CURTIS BAY
+    16:06 (+3d)–16:08 (+3d)   walk to PATAPSCO AVE & POTEE ST mb eb
+                              wait 8m
+    16:16 (+3d)–16:37 (+3d)   Maryland Transit Administration 69 Patapsco Station - Jumpers Hole toward JUMPERS HOLE
+    16:37 (+3d)–16:37 (+3d)   walk to Glen Burnie Light Rail Station
+                              wait 53m
+    17:31 (+3d)–17:54 (+3d)   Anne Arundel County Office of Transportation 201 Arundel Mills - Lake Shore
+    17:54 (+3d)–17:54 (+3d)   walk to Arundel Mills Mall
+                              wait 5m
+    18:00 (+3d)–18:15 (+3d)   Regional Transportation Agency of Central Maryland 502 Laurel / Arundel Mills toward Towne Centre Laurel
+                              wait 17m
+    18:32 (+3d)–18:46 (+3d)   Regional Transportation Agency of Central Maryland 409 Elkridge Corners toward Towne Centre Laurel
+    18:46 (+3d)–18:46 (+3d)   walk to 4 St+Montrose Av
+                              wait 39m
+    19:25 (+3d)–19:49 (+3d)   WMATA P12 Laurel-Greenbelt toward South to Greenbelt
+    19:49 (+3d)–20:02 (+3d)   walk to Baltimore Av+Ikea Center Bl
+                              wait 16m
+    20:18 (+3d)–20:55 (+3d)   WMATA P1X Baltimore Av Limited toward South to Rhode Island Av
+    20:55 (+3d)–20:56 (+3d)   walk to 18 St NE+Hamlin St NE
+                              wait 19m
+    21:16 (+3d)–21:39 (+3d)   WMATA C71 18 St toward South to Union Station
+    21:39 (+3d)–21:41 (+3d)   walk to Washington Union Station
+  arrive Union Station 21:41 (+3d) (86h41m door to door)

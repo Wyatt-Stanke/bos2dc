@@ -6,8 +6,8 @@ Road type (OpenStreetMap): lanes in the bus's direction of travel, or controlled
 
 ====================================================================================================
 RECOMMENDED: least frequent leg as frequent as possible (then prefer local stops)
-  weakest link: effective headway 12h54m · longest walk 2.2 km
-  39 boardings · in-vehicle 30h52m · walking 1h37m · expected waiting 28h17m · frequency-based trip time 60h46m
+  weakest link: effective headway 12h54m · longest walk 2.0 km
+  39 boardings · in-vehicle 30h52m · walking 1h34m · expected waiting 28h17m · frequency-based trip time 60h43m
   road type: 1 lane 229 mi (37%) · 2 lanes 197 mi (32%) · 3+ lanes 66 mi (11%) · controlled access 110 mi (18%) · flex 19 mi (3%)
   timetable check (same weekday timetable every day): 1 distinct connections per day; door-to-door 95h42m fastest, 95h42m median
     leave South Station by 06:42 → Union Station 06:24 (+4d)  (95h42m)
@@ -54,7 +54,7 @@ RECOMMENDED: least frequent leg as frequent as possible (then prefer local stops
       Narragansett (Salt Pond Plaza) at Stop & Shop → 204 - Westerly Flex zone edge
       on demand 06:00–18:30, book by app or phone · eff. headway 1h45m (assumed response) · ≈18.7 mi, ride ≈1h09m
       https://www.ripta.com/204
-  20. walk 2164 m (37m) → I-95 Commuter Lot (CTDOT)
+  20. walk 1995 m (34m) → I-95 Commuter Lot (CTDOT)
   21. Southeast Area Transit District 108 New London To Foxwoods Via Groton & Olde Mistick Village
       I-95 Commuter Lot (CTDOT) → New London Union Station
       8 departures in window (9 all day, 07:16–23:16) · eff. headway 2h00m · ride 39m · 1 lane 5.3 / 2 lanes 2.1 / 3+ lanes 0.9 / controlled access 12.6 mi
@@ -595,7 +595,7 @@ MOST LOCAL at any frequency
 SUMMARY
   route                                     weakest boards  longest  1-ln  2-ln  3+ln    CA  flex  exp.time  fastest
                                             headway            walk    mi    mi    mi    mi    mi               (tt)
-  RECOMMENDED                                12h54m     39    2.2km   229   197    66   110    19    60h46m   95h42m
+  RECOMMENDED                                12h54m     39    2.0km   229   197    66   110    19    60h43m   95h42m
   MOST LOCAL at the same weakest-link freq   12h54m     52    1.8km   297   238    54    33    18    71h36m   95h37m
   MOST LOCAL at any frequency                13h40m     50    1.8km   291   238    55    33    18    70h55m   87h20m
 
@@ -630,8 +630,8 @@ RECOMMENDED — leaving South Station at 07:00:
           18:12–18:33         Rhode Island Public Transit Authority 69 URI Kingston/Galilee toward Galilee
                               wait 11h27m
     06:00 (+1d)–07:09 (+1d)   Rhode Island Public Transit Authority 204 - Westerly Flex (on demand) to 204 - Westerly Flex zone edge
-    07:09 (+1d)–07:47 (+1d)   walk to I-95 Commuter Lot (CTDOT)
-                              wait 1h28m
+    07:09 (+1d)–07:44 (+1d)   walk to I-95 Commuter Lot (CTDOT)
+                              wait 1h31m
     09:16 (+1d)–09:55 (+1d)   Southeast Area Transit District 108 New London To Foxwoods Via Groton & Olde Mistick Village toward New London via Groton and Olde Mistick Village
     09:55 (+1d)–09:55 (+1d)   walk to New London Train Station
                               wait 4m
@@ -689,10 +689,9 @@ RECOMMENDED — leaving South Station at 07:00:
     06:35 (+3d)–06:56 (+3d)   Harford Transit LINK 5 Teal toward Outbound
                               wait 34m
     07:30 (+3d)–08:07 (+3d)   Harford Transit LINK 3 Silver toward Westbound
-                              wait 1h38m
-    09:45 (+3d)–09:53 (+3d)   Harford Transit LINK 3 Silver toward Westbound
-    09:53 (+3d)–10:00 (+3d)   walk to US 40 & JOPPA FARM RD wb
-                              wait 20h03m
+    08:07 (+3d)–08:23 (+3d)   Harford Transit LINK 3 Silver toward Westbound
+    08:23 (+3d)–08:30 (+3d)   walk to US 40 & JOPPA FARM RD wb
+                              wait 21h33m
     06:04 (+4d)–06:45 (+4d)   Maryland Transit Administration 420 HAVRE DE GRACE - HOPKINS toward 420/1 JOHNS HOPKINS
     06:45 (+4d)–06:46 (+4d)   walk to FAYETTE ST PLAZA wb
                               wait 8m
@@ -829,10 +828,9 @@ MOST LOCAL at the same weakest-link frequency — leaving South Station at 07:00
     10:05 (+3d)–10:43 (+3d)   Harford Transit LINK 5 Teal toward Outbound
                               wait 17m
     11:00 (+3d)–11:37 (+3d)   Harford Transit LINK 3 Silver toward Westbound
-                              wait 1h00m
-    12:37 (+3d)–12:53 (+3d)   Harford Transit LINK 3 Silver toward Westbound
-    12:53 (+3d)–13:00 (+3d)   walk to US 40 & JOPPA FARM RD wb
-                              wait 17h03m
+    11:37 (+3d)–11:53 (+3d)   Harford Transit LINK 3 Silver toward Westbound
+    11:53 (+3d)–12:00 (+3d)   walk to US 40 & JOPPA FARM RD wb
+                              wait 18h03m
     06:04 (+4d)–06:43 (+4d)   Maryland Transit Administration 420 HAVRE DE GRACE - HOPKINS toward 420/1 JOHNS HOPKINS
     06:43 (+4d)–06:45 (+4d)   walk to LIGHT ST & PRATT ST
                               wait 7m
