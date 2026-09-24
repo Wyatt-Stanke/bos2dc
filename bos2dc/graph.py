@@ -73,6 +73,9 @@ class GraphParams:
     walk_radius_m: float = 400.0
     gap_radius_m: float = 2500.0
     gap_neighbors: int = 3
+    # Long walks bridging otherwise unconnected networks (nearest stop of each
+    # other agency only). Whether they may be used is decided at search time.
+    max_gap_m: float = 8000.0
     walk_speed_mps: float = 1.25
     walk_detour: float = 1.3
     access_radius_m: float = 800.0
@@ -95,10 +98,12 @@ class Graph:
     ride_v: np.ndarray
     ride_freq: np.ndarray  # effective departures per window serving u -> v
     ride_time: np.ndarray  # seconds, frequency-weighted mean in-vehicle time
+    ride_miles: np.ndarray  # (n, 3) miles of local / city / express running
     # walk edges
     walk_u: np.ndarray
     walk_v: np.ndarray
     walk_time: np.ndarray
+    walk_dist: np.ndarray  # metres (straight line)
     params: GraphParams
     feeds: dict[str, CompiledFeed]
     # (feed_id, pattern index) and node ids of each pattern's stops
@@ -110,6 +115,7 @@ class Graph:
     flex_v: np.ndarray = field(default_factory=lambda: np.zeros(0, np.int64))
     flex_freq: np.ndarray = field(default_factory=lambda: np.zeros(0))
     flex_time: np.ndarray = field(default_factory=lambda: np.zeros(0))
+    flex_dist: np.ndarray = field(default_factory=lambda: np.zeros(0))  # metres, straight line
     flex_zone: np.ndarray = field(default_factory=lambda: np.zeros(0, np.int64))
     zones: list = field(default_factory=list)
     day: object = None  # representative date (for Flex service hours)
@@ -141,7 +147,53 @@ def _merge_stops(feeds: list[CompiledFeed]) -> tuple[pd.DataFrame, dict[str, np.
     return nodes, mapping
 
 
-def _pattern_pairs(nd: np.ndarray, board, alight, dep, arr, p: GraphParams):
+# Stop-density classes (stops per mile): the definition asked for is
+# local >= 4, city >= 2, express below that.
+LOCAL, CITY, EXPRESS = 0, 1, 2
+CLASS_NAMES = ("local", "city", "express")
+LOCAL_MIN_DENSITY = 4.0
+CITY_MIN_DENSITY = 2.0
+DENSITY_WINDOW_MI = 1.0
+METRES_PER_MILE = 1609.344
+
+
+def segment_classes(hop_miles: np.ndarray, window_mi: float = DENSITY_WINDOW_MI) -> np.ndarray:
+    """Class of each hop between consecutive served stops.
+
+    Stop density is measured over a ~1 mile window centred on the hop (all
+    hops whose midpoints fall within +-window/2): a lone short hop between two
+    closely spaced stops on an otherwise express run stays express, and a
+    route that runs local through a town then express on the highway gets
+    both classes on the corresponding segments.
+    """
+    h = np.maximum(hop_miles, 1e-3)
+    c = np.concatenate([[0.0], np.cumsum(h)])
+    mid = c[:-1] + h / 2
+    lo = np.searchsorted(mid, mid - window_mi / 2, side="left")
+    hi = np.searchsorted(mid, mid + window_mi / 2, side="right")
+    density = (hi - lo) / (c[hi] - c[lo])
+    return np.where(density >= LOCAL_MIN_DENSITY, LOCAL, np.where(density >= CITY_MIN_DENSITY, CITY, EXPRESS))
+
+
+def class_miles(nd, board, alight, xy):
+    """Cumulative miles per class along the pattern, indexed by stop position."""
+    served = np.flatnonzero(board | alight)
+    L = len(nd)
+    cum = np.zeros((L, 3))
+    if len(served) < 2:
+        return cum
+    pts = xy[nd[served]]
+    hop = np.linalg.norm(np.diff(pts, axis=0), axis=1) / METRES_PER_MILE
+    cls = segment_classes(hop)
+    per = np.zeros((len(hop), 3))
+    per[np.arange(len(hop)), cls] = hop
+    cum_served = np.vstack([np.zeros(3), np.cumsum(per, axis=0)])
+    # Unserved positions (pass-through timepoints) inherit the previous served value.
+    pos = np.searchsorted(served, np.arange(L), side="right") - 1
+    return cum_served[np.maximum(pos, 0)]
+
+
+def _pattern_pairs(nd: np.ndarray, board, alight, dep, arr, xy, p: GraphParams):
     L = len(nd)
     freq = effective_frequency(dep, p.window_start, p.window_end)
     if not freq.any():
@@ -157,16 +209,24 @@ def _pattern_pairs(nd: np.ndarray, board, alight, dep, arr, p: GraphParams):
     ok = board[I] & alight[J] & (freq[I] > 0) & (nd[I] != nd[J])
     I, J = I[ok], J[ok]
     ride = np.maximum(prof_arr[J] - prof_dep[I], 30.0)
-    return nd[I], nd[J], freq[I], ride
+    cum = class_miles(nd, board, alight, xy)
+    miles = cum[J] - cum[I]
+    return nd[I], nd[J], freq[I], ride, miles
 
 
-def _aggregate(u, v, freq, time, n):
-    """Pool parallel (u, v) ride edges: sum frequencies, frequency-weighted mean time."""
-    key = u.astype(np.int64) * n + v
+def _aggregate(u, v, freq, time, miles, n):
+    """Pool parallel ride edges that share (u, v) and dominant stop-density
+    class: sum frequencies, frequency-weighted mean time and class miles.
+    Keeping classes apart lets the search pick a local run over an express
+    one on the same stop pair."""
+    cls = np.argmax(miles, axis=1) if len(miles) else np.zeros(0, np.int64)
+    key = (u.astype(np.int64) * n + v) * 3 + cls
     uniq, inv = np.unique(key, return_inverse=True)
     f = np.bincount(inv, weights=freq)
     t = np.bincount(inv, weights=time * freq) / f
-    return (uniq // n).astype(np.int64), (uniq % n).astype(np.int64), f, t
+    m = np.column_stack([np.bincount(inv, weights=miles[:, k] * freq) / f for k in range(3)])
+    pair = uniq // 3
+    return (pair // n).astype(np.int64), (pair % n).astype(np.int64), f, t, m
 
 
 def _merged_patterns(feeds: list[CompiledFeed], mapping):
@@ -195,21 +255,22 @@ def build_graph(feeds: list[CompiledFeed], params: GraphParams) -> Graph:
     log.info("graph: %d stops from %d feeds", n, len(feeds))
     pattern_nodes = {(f.feed_id, k): mapping[f.feed_id][pat.stops] for f in feeds for k, pat in enumerate(f.patterns)}
 
+    xy = project(nodes["lat"], nodes["lon"])
     by_feed: dict[str, list] = {}
     for nd, board, alight, dep, arr, feed_id in _merged_patterns(feeds, mapping).values():
-        res = _pattern_pairs(nd, board, alight, dep.astype(np.int64), arr.astype(np.int64), params)
+        res = _pattern_pairs(nd, board, alight, dep.astype(np.int64), arr.astype(np.int64), xy, params)
         if res is not None:
             by_feed.setdefault(feed_id, []).append(res)
     parts = []
     for chunks in by_feed.values():
         # Pre-aggregate per feed to bound peak memory.
-        parts.append(_aggregate(*(np.concatenate([c[i] for c in chunks]) for i in range(4)), n))
-    ru, rv, rf, rt = _aggregate(*(np.concatenate([p[i] for p in parts]) for i in range(4)), n)
+        parts.append(_aggregate(*(np.concatenate([c[i] for c in chunks]) for i in range(5)), n))
+    ru, rv, rf, rt, rm = _aggregate(*(np.concatenate([p[i] for p in parts]) for i in range(5)), n)
     log.info("graph: %d pooled ride edges", len(ru))
 
-    wu, wv, wt = _walk_edges(nodes, params)
+    wu, wv, wt, wd = _walk_edges(nodes, params)
     log.info("graph: %d walk edges", len(wu))
-    return Graph(nodes, ru, rv, rf, rt, wu, wv, wt, params, {f.feed_id: f for f in feeds}, pattern_nodes)
+    return Graph(nodes, ru, rv, rf, rt, rm, wu, wv, wt, wd, params, {f.feed_id: f for f in feeds}, pattern_nodes)
 
 
 def _walk_seconds(dist_m, p: GraphParams):
@@ -222,20 +283,24 @@ def _walk_edges(nodes: pd.DataFrame, p: GraphParams):
     pairs = tree.query_pairs(p.walk_radius_m, output_type="ndarray")
     us, vs = [pairs[:, 0], pairs[:, 1]], [pairs[:, 1], pairs[:, 0]]
 
-    # Inter-agency gap links: nearest stops of each other feed.
+    # Inter-agency links: the nearest few stops of every other feed within
+    # gap_radius, plus the single nearest one up to max_gap (long walks that
+    # the search only uses when nothing shorter connects).
     feed_codes, feed_names = pd.factorize(nodes["feed_id"])
+    reach = max(p.gap_radius_m, p.max_gap_m)
     for code in range(len(feed_names)):
         own = np.flatnonzero(feed_codes == code)
         others = np.flatnonzero(feed_codes != code)
-        lo, hi = xy[own].min(axis=0) - p.gap_radius_m, xy[own].max(axis=0) + p.gap_radius_m
+        lo, hi = xy[own].min(axis=0) - reach, xy[own].max(axis=0) + reach
         near = others[np.all((xy[others] >= lo) & (xy[others] <= hi), axis=1)]
         if not len(near):
             continue
         ftree = cKDTree(xy[own])
         k = min(p.gap_neighbors, len(own))
-        d, j = ftree.query(xy[near], k=k, distance_upper_bound=p.gap_radius_m)
+        d, j = ftree.query(xy[near], k=k, distance_upper_bound=reach)
         d, j = d.reshape(len(near), k), j.reshape(len(near), k)
-        ok = np.isfinite(d) & (d > p.walk_radius_m)
+        rank = np.arange(k)[None, :]
+        ok = np.isfinite(d) & (d > p.walk_radius_m) & ((d <= p.gap_radius_m) | (rank == 0))
         src = np.repeat(near, k).reshape(len(near), k)[ok]
         dst = own[j[ok]]
         us += [src, dst]
@@ -245,7 +310,7 @@ def _walk_edges(nodes: pd.DataFrame, p: GraphParams):
     key = np.unique(u * len(nodes) + v)
     u, v = key // len(nodes), key % len(nodes)
     dist = np.linalg.norm(xy[u] - xy[v], axis=1)
-    return u, v, _walk_seconds(dist, p)
+    return u, v, _walk_seconds(dist, p), dist
 
 
 def attach_places(g: Graph, origin, destination) -> Graph:
@@ -258,20 +323,22 @@ def attach_places(g: Graph, origin, destination) -> Graph:
         {"stop_id": "ORIGIN", "name": origin.name, "lat": origin.lat, "lon": origin.lon, "feed_id": ""},
         {"stop_id": "DESTINATION", "name": destination.name, "lat": destination.lat, "lon": destination.lon, "feed_id": ""},
     ])
-    wu, wv, wt = [g.walk_u], [g.walk_v], [g.walk_time]
+    wu, wv, wt, wd = [g.walk_u], [g.walk_v], [g.walk_time], [g.walk_dist]
     for place, node, outbound in ((origin, o, True), (destination, d, False)):
         pxy = project([place.lat], [place.lon])[0]
         near = np.array(tree.query_ball_point(pxy, p.access_radius_m), dtype=np.int64)
         if not len(near):
             raise RuntimeError(f"no bus stop within {p.access_radius_m:.0f} m of {place.name}")
-        t = _walk_seconds(np.linalg.norm(xy[near] - pxy, axis=1), p)
+        dist = np.linalg.norm(xy[near] - pxy, axis=1)
         if outbound:
             wu.append(np.full(len(near), node)); wv.append(near)
         else:
             wu.append(near); wv.append(np.full(len(near), node))
-        wt.append(t)
+        wt.append(_walk_seconds(dist, p))
+        wd.append(dist)
     g.nodes = pd.concat([g.nodes, new_nodes], ignore_index=True)
-    g.walk_u, g.walk_v, g.walk_time = np.concatenate(wu), np.concatenate(wv), np.concatenate(wt)
+    g.walk_u, g.walk_v = np.concatenate(wu), np.concatenate(wv)
+    g.walk_time, g.walk_dist = np.concatenate(wt), np.concatenate(wd)
     g.origin, g.destination = o, d
     return g
 
@@ -294,8 +361,8 @@ def add_flex(g: Graph, zones: list[FlexZone], day, max_pairwise: int = 700) -> G
     p = g.params
     xy = project(g.nodes["lat"], g.nodes["lon"])
     lat, lon = g.nodes["lat"].to_numpy(), g.nodes["lon"].to_numpy()
-    new_nodes, fu, fv, fc, ft, fz = [], [], [], [], [], []
-    wu, wv, wt = [g.walk_u], [g.walk_v], [g.walk_time]
+    new_nodes, fu, fv, fc, ft, fz, fd = [], [], [], [], [], [], []
+    wu, wv, wt, wd = [g.walk_u], [g.walk_v], [g.walk_time], [g.walk_dist]
     next_id = g.n
     kept: list[FlexZone] = []
     for zone in zones:
@@ -336,6 +403,7 @@ def add_flex(g: Graph, zones: list[FlexZone], day, max_pairwise: int = 700) -> G
                 wu += [np.array([stop, node])]
                 wv += [np.array([node, stop])]
                 wt += [np.repeat(t, 2)]
+                wd += [np.repeat(dist, 2)]
         access = np.array(access, dtype=np.int64)
         axy = np.vstack(access_xy)
         if len(access) < 2:
@@ -349,14 +417,17 @@ def add_flex(g: Graph, zones: list[FlexZone], day, max_pairwise: int = 700) -> G
         fu.append(access[I]); fv.append(access[J])
         fc.append(np.full(len(I), freq)); ft.append(np.maximum(dist * p.flex_detour / p.flex_speed_mps, 60.0))
         fz.append(np.full(len(I), len(kept)))
+        fd.append(dist)
         kept.append(zone)
         log.info("flex zone %s: %d access points, effective frequency %.1f", zone.name, len(access), freq)
     if new_nodes:
         g.nodes = pd.concat([g.nodes, pd.DataFrame(new_nodes)], ignore_index=True)
-    g.walk_u, g.walk_v, g.walk_time = np.concatenate(wu), np.concatenate(wv), np.concatenate(wt)
+    g.walk_u, g.walk_v = np.concatenate(wu), np.concatenate(wv)
+    g.walk_time, g.walk_dist = np.concatenate(wt), np.concatenate(wd)
     if fu:
         g.flex_u, g.flex_v = np.concatenate(fu), np.concatenate(fv)
         g.flex_freq, g.flex_time, g.flex_zone = np.concatenate(fc), np.concatenate(ft), np.concatenate(fz)
+        g.flex_dist = np.concatenate(fd)
     g.zones = kept
     g.day = day
     return g

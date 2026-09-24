@@ -117,3 +117,26 @@ FLEX_ARCGIS_SOURCES = [
         "hours_fields": {"weekday": "WkServ", "saturday": "SatServ", "sunday": "SunServ"},
     },
 ]
+
+
+# Transitland Atlas feeds the Mobility Database does not carry. NECTD and
+# WRTD (published with UConn's campus routes) are the only links between
+# SEAT/CTtransit and north-eastern Connecticut; the New Jersey county systems
+# are local alternatives to NJ Transit's long-distance routes.
+ATLAS_EXTRA_FEEDS = [
+    "f-northeastern~connecticut~transit~district",
+    "f-university~of~connecticut",
+    "f-atlantic~county~nj",
+    "f-cumberland~county~nj",
+    "f-gloucester~county~nj",
+    "f-hunterdon~county~link",
+    "f-warren~county~nj",
+    "f-southjerseytransportationauthority",
+    "f-hoboken~nj",
+]
+# Used only when git is unavailable to clone the atlas.
+ATLAS_FALLBACK_FILES = [
+    "cadavl.com.dmfr.json", "westchestergov.com.dmfr.json", "passio3.com.dmfr.json",
+    "hosted-gtfs-feeds.s3.amazonaws.com.dmfr.json", "nj-transit.dmfr.json", "cttransit.com.dmfr.json",
+    "ripta.com.dmfr.json", "trilliumtransit.com.dmfr.json", "massdot.state.ma.us.dmfr.json",
+]

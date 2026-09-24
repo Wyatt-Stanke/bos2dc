@@ -204,3 +204,53 @@ def test_parse_hours():
     assert parse_hours("6:00am-6:30pm") == [(6 * 3600, 18 * 3600 + 1800, None)]
     assert parse_hours("6:45am-5:12pm: every 90 min") == [(6 * 3600 + 2700, 17 * 3600 + 720, 5400)]
     assert parse_hours("NO SERVICE") == []
+
+
+def test_segment_classes():
+    from bos2dc.graph import CITY, EXPRESS, LOCAL, segment_classes
+    # 10 hops of 0.2 mi (5/mi), 5 of 0.4 mi (2.5/mi), then 3 highway hops of 5 mi.
+    hops = np.array([0.2] * 10 + [0.4] * 5 + [5.0] * 3)
+    cls = segment_classes(hops)
+    assert (cls[:8] == LOCAL).all()
+    assert (cls[11:15] == CITY).all()
+    assert (cls[15:] == EXPRESS).all()
+
+
+def test_local_preference_picks_local_run(tmp_path):
+    # Two parallel routes A -> D: a local with a stop every 0.1 mi and an
+    # express with no intermediate stops. Same frequency; the express is faster.
+    lat = [40.0 + 0.00145 * k for k in range(21)]  # ~0.1 mi apart, 2 mi total
+    stops = [(f"L{k}", f"L{k}", la, -75.0) for k, la in enumerate(lat)]
+    local_seq = [(f"L{k}", 90 * k) for k in range(21)]
+    express_seq = [("L0", 0), ("L20", 600)]
+    f = make_feed(tmp_path / "loc.zip", stops, {"LOC": every(6, 22, 30, local_seq), "EXP": every(6, 22, 30, express_seq)})
+    feed = compile_feed(f, "loc", "loc", DAY)
+    g = attach_places(build_graph([feed], GraphParams()), Place("O", lat[0], -75.0), Place("D", lat[-1], -75.0))
+    fast = Searcher(g, CostParams(city_penalty_s_per_mile=0, express_penalty_s_per_mile=0))
+    r = fast.best_route(fast.max_bottleneck())
+    assert [l.miles for l in r.legs if l.kind == "ride"][0][2] > 1.5  # took the express
+    local = Searcher(g, CostParams.most_local())
+    r = local.best_route(local.max_bottleneck())
+    ride = [l for l in r.legs if l.kind == "ride"]
+    assert len(ride) == 1 and ride[0].miles[0] > 1.5  # took the local
+    sim = Simulator(g, r)
+    arr, steps = sim.run(7 * 3600, detail=True)
+    assert "LOC" in [st for st in steps if st.kind == "ride"][0].label
+
+
+def test_required_walk(tmp_path):
+    # Two networks 3 km apart: unreachable at the default 2.5 km gap radius,
+    # connected once walks up to ~3 km are allowed.
+    f1 = make_feed(tmp_path / "a.zip", [("A1", "A1", 40.000, -75.0), ("A2", "A2", 40.050, -75.0)],
+                   {"R": every(6, 22, 30, [("A1", 0), ("A2", 600)])})
+    f2 = make_feed(tmp_path / "b.zip", [("B1", "B1", 40.077, -75.0), ("B2", "B2", 40.300, -75.0)],
+                   {"S": every(6, 22, 30, [("B1", 0), ("B2", 900)])})
+    feeds = [compile_feed(f1, "a", "a", DAY), compile_feed(f2, "b", "b", DAY)]
+    g = attach_places(build_graph(feeds, GraphParams()), ORIGIN, DEST)
+    s = Searcher(g)
+    assert not s.reachable(float(s.levels[0]))
+    need = s.required_walk()
+    assert 2900 < need < 3100
+    s2 = Searcher(g, max_walk_m=need + 1)
+    r = s2.best_route(s2.max_bottleneck())
+    assert 2900 < r.longest_walk_m < 3100

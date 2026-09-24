@@ -1,6 +1,6 @@
 """Command line interface.
 
-    bos2dc fetch            discover + download GTFS feeds from the Mobility Database
+    bos2dc fetch            discover + download GTFS feeds (Mobility Database + Transitland Atlas)
     bos2dc route            compute the frequency-optimal route from downloaded feeds
     bos2dc run              fetch (if no manifest yet) then route
 """
@@ -41,6 +41,10 @@ def _add_route_args(p: argparse.ArgumentParser) -> None:
     p.add_argument("--flex", action="store_true", help="also use demand-response (Flex) zones (off by default: not buses)")
     p.add_argument("--flex-zones", action="append", default=[], metavar="GEOJSON", help="extra Flex zones file (repeatable; see README)")
     p.add_argument("--flex-headway", type=float, default=60.0, help="minutes: equivalent headway of an on-demand zone")
+    p.add_argument("--max-walk", type=float, help="km: longest walk allowed (default: gap radius, raised automatically if nothing connects)")
+    p.add_argument("--no-auto-walk", action="store_true", help="fail instead of raising the walk limit when nothing connects")
+    p.add_argument("--city-penalty", type=float, default=1.0, help="minutes added per mile of city-density riding (2-4 stops/mi)")
+    p.add_argument("--express-penalty", type=float, default=3.0, help="minutes added per mile of express riding (<2 stops/mi)")
     p.add_argument("--itinerary", metavar="HH:MM", action="append", default=[], help="print a timed itinerary leaving at this time")
     p.add_argument("--out", type=Path, default=Path("out"), help="directory for route.json / route.geojson")
     p.add_argument("--workers", type=int, default=max(1, min(4, (os.cpu_count() or 2) - 1)))
@@ -53,18 +57,21 @@ def main(argv: list[str] | None = None) -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
     f = sub.add_parser("fetch", help="download feeds")
     f.add_argument("--buffer-km", type=float, default=config.CORRIDOR_BUFFER_KM)
+    f.add_argument("--no-atlas", action="store_true", help="skip the Transitland Atlas (stale-feed refresh and extra feeds)")
     r = sub.add_parser("route", help="compute route from downloaded feeds")
     _add_route_args(r)
     both = sub.add_parser("run", help="fetch if needed, then route")
     _add_route_args(both)
     both.add_argument("--refetch", action="store_true")
+    both.add_argument("--no-atlas", action="store_true", help="skip the Transitland Atlas when fetching")
     args = ap.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO if args.verbose else logging.WARNING, format="%(asctime)s %(levelname)s %(message)s")
     today = dt.date.today()
 
     if args.cmd == "fetch" or (args.cmd == "run" and (args.refetch or not (args.data_dir / "manifest.json").exists())):
-        feeds = catalog.fetch(args.data_dir, today, buffer_km=getattr(args, "buffer_km", config.CORRIDOR_BUFFER_KM))
+        feeds = catalog.fetch(args.data_dir, today, buffer_km=getattr(args, "buffer_km", config.CORRIDOR_BUFFER_KM),
+                              use_atlas=not args.no_atlas)
         print(f"{len(feeds)} feeds ready in {args.data_dir}", file=sys.stderr)
         if args.cmd == "fetch":
             return 0
@@ -79,7 +86,10 @@ def main(argv: list[str] | None = None) -> int:
         graph=GraphParams(window_start=w0, window_end=w1, walk_radius_m=args.walk_radius,
                           gap_radius_m=args.gap_radius, access_radius_m=args.access_radius,
                           flex_headway_s=int(args.flex_headway * 60)),
-        cost=CostParams(wait_factor=args.wait_factor, board_penalty_s=args.board_penalty * 60, walk_factor=args.walk_factor),
+        cost=CostParams(wait_factor=args.wait_factor, board_penalty_s=args.board_penalty * 60, walk_factor=args.walk_factor,
+                        city_penalty_s_per_mile=args.city_penalty * 60, express_penalty_s_per_mile=args.express_penalty * 60),
+        max_walk_m=args.max_walk * 1000 if args.max_walk else None,
+        auto_walk=not args.no_auto_walk,
         exclude_agency=args.exclude_agency,
         exclude_feed=args.exclude_feed,
         max_stale_days=args.max_stale_days,
@@ -91,8 +101,9 @@ def main(argv: list[str] | None = None) -> int:
     print(f"Representative day: {WEEKDAYS[date.weekday()].title()} {date.isoformat()}")
     print(report.text_report(res))
     for t in args.itinerary:
-        print()
-        print(report.itinerary_text(res, 0, _clock(t)))
+        for i in range(len(res.routes)):
+            print()
+            print(report.itinerary_text(res, i, _clock(t)))
     report.write_outputs(res, args.out)
     print(f"\nwrote {args.out / 'route.json'} and {args.out / 'route.geojson'}", file=sys.stderr)
     return 0

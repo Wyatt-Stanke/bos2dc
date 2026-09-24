@@ -13,7 +13,7 @@ from pathlib import Path
 
 import requests
 
-from . import config
+from . import atlas, config
 from .flex import fetch_zones
 from .geo import bbox_near_polyline
 
@@ -198,12 +198,69 @@ def _download(session: requests.Session, url: str, dest: Path) -> None:
             time.sleep(2 ** (attempt + 1))
 
 
-def download_feeds(choices: list[FeedChoice], data_dir: Path, today: dt.date, try_producer: bool = True) -> list[FeedChoice]:
+def _stops_bbox(zip_path) -> tuple[float, float, float, float] | None:
+    import zipfile
+
+    import numpy as np
+    import pandas as pd
+
+    from .gtfs import read_table
+
+    try:
+        with zipfile.ZipFile(zip_path) as zf:
+            s = read_table(zf, "stops.txt", ["stop_lat", "stop_lon"])
+    except Exception:  # noqa: BLE001
+        return None
+    lat = pd.to_numeric(s["stop_lat"], errors="coerce").to_numpy(dtype=float)
+    lon = pd.to_numeric(s["stop_lon"], errors="coerce").to_numpy(dtype=float)
+    ok = np.isfinite(lat) & np.isfinite(lon) & (np.abs(lat) > 1)
+    if not ok.any():
+        return None
+    return lat[ok].min(), lat[ok].max(), lon[ok].min(), lon[ok].max()
+
+
+def _overlaps(a, b, pad: float = 0.3) -> bool:
+    return not (a[1] + pad < b[0] or b[1] + pad < a[0] or a[3] + pad < b[2] or b[3] + pad < a[2])
+
+
+def _try_fresh(session, c: FeedChoice, url: str, dest: Path, today: dt.date, label: str, trusted: bool = True) -> bool:
+    """Download `url`; adopt it for `c` if its calendar reaches `today` and it
+    covers the same area as the stale copy (guards against name matches that
+    are a different agency with the same name)."""
+    from .gtfs import service_date_range
+
+    try:
+        if not dest.exists():
+            log.info("stale %s; trying %s %s", c.feed_id, label, url)
+            _download(session, url, dest)
+        rng = service_date_range(dest)
+    except Exception as e:  # noqa: BLE001 - any failure just means "keep the catalog copy"
+        log.info("%s for %s unusable: %s", label, c.feed_id, e)
+        return False
+    if not rng or rng[1] < today:
+        return False
+    old_box, new_box = _stops_bbox(c.path), _stops_bbox(dest)
+    if old_box is None and c.bbox and None not in c.bbox.values():
+        old_box = (c.bbox["minimum_latitude"], c.bbox["maximum_latitude"], c.bbox["minimum_longitude"], c.bbox["maximum_longitude"])
+    if (old_box is None and not trusted) or (old_box and new_box and not _overlaps(old_box, new_box)):
+        log.info("%s for %s: cannot confirm it covers the same area; ignored", label, c.feed_id)
+        return False
+    c.path, c.url, c.source = str(dest), url, label
+    c.service_start, c.service_end = rng[0].isoformat(), rng[1].isoformat()
+    c.stale = False
+    c.notes.append(f"catalog copy stale; using {label} URL")
+    return True
+
+
+def download_feeds(choices: list[FeedChoice], data_dir: Path, today: dt.date, try_producer: bool = True,
+                   atlas_feeds: list | None = None) -> list[FeedChoice]:
     """Download each chosen dataset (cached by dataset id).
 
-    For stale catalog datasets, the agency's own producer URL is tried; it is
-    used instead when its calendar reaches `today`.
+    For stale catalog datasets, the agency's own producer URL and then any
+    matching Transitland Atlas URLs are tried; the first whose calendar
+    reaches `today` replaces the catalog copy.
     """
+    from . import atlas
     from .gtfs import service_date_range  # local import: gtfs pulls in pandas
 
     session = requests.Session()
@@ -224,26 +281,47 @@ def download_feeds(choices: list[FeedChoice], data_dir: Path, today: dt.date, tr
             if rng:
                 c.service_start, c.service_end = (d.isoformat() for d in rng)
                 c.stale = rng[1] < today
-        producer = c.producer_url
-        if c.stale and try_producer and producer and not c.producer_auth:
-            pdest = feed_root / c.feed_id / f"producer-{today.isoformat()}.zip"
-            try:
-                if not pdest.exists():
-                    log.info("stale %s; trying producer URL %s", c.feed_id, producer)
-                    _download(session, producer, pdest)
-                rng = service_date_range(pdest)
-            except Exception as e:  # noqa: BLE001 - any failure just means "keep the catalog copy"
-                log.info("producer URL for %s unusable: %s", c.feed_id, e)
-                rng = None
-            if rng and rng[1] >= today:
-                c.path, c.url, c.source = str(pdest), producer, "producer"
-                c.service_start, c.service_end = rng[0].isoformat(), rng[1].isoformat()
-                c.stale = False
-                c.notes.append("catalog copy stale; using producer URL")
-            else:
-                c.notes.append(f"stale: service ends {c.service_end}; schedules mapped onto same weekday")
+        if c.stale and try_producer and c.producer_url and not c.producer_auth:
+            _try_fresh(session, c, c.producer_url, feed_root / c.feed_id / f"producer-{today.isoformat()}.zip", today, "producer")
+        if c.stale and atlas_feeds:
+            for k, (af, by_url) in enumerate(atlas.match(atlas_feeds, [c.producer_url, c.url], c.provider)):
+                dest = feed_root / c.feed_id / f"atlas-{k}-{today.isoformat()}.zip"
+                if _try_fresh(session, c, af.url, dest, today, f"transitland-atlas {af.onestop_id}", trusted=by_url):
+                    break
+        if c.stale:
+            c.notes.append(f"stale: service ends {c.service_end}; schedules mapped onto same weekday")
         ready.append(c)
     return ready
+
+
+def atlas_extras(atlas_feeds: list, ids: list[str], data_dir: Path, today: dt.date) -> list[FeedChoice]:
+    """Feeds taken from the Transitland Atlas because the catalog lacks them."""
+    from .gtfs import service_date_range
+
+    session = requests.Session()
+    out = []
+    by_id = {f.onestop_id: f for f in atlas_feeds}
+    for oid in ids:
+        af = by_id.get(oid)
+        if af is None or not af.url:
+            log.warning("atlas feed %s not found", oid)
+            continue
+        dest = data_dir / "feeds" / oid / f"atlas-{today.isoformat()}.zip"
+        try:
+            if not dest.exists():
+                log.info("download atlas %s", oid)
+                _download(session, af.url, dest)
+            rng = service_date_range(dest)
+        except Exception as e:  # noqa: BLE001
+            log.warning("skip atlas feed %s: %s", oid, e)
+            continue
+        out.append(FeedChoice(
+            feed_id=oid, provider=" / ".join(af.operators) or oid, feed_name="", status="atlas",
+            dataset_id=dest.stem, url=af.url, source="atlas-extra",
+            service_start=rng[0].isoformat() if rng else None, service_end=rng[1].isoformat() if rng else None,
+            stale=bool(rng) and rng[1] < today, path=str(dest),
+        ))
+    return out
 
 
 def write_manifest(choices: list[FeedChoice], rejected, path: Path) -> None:
@@ -261,14 +339,19 @@ def read_manifest(path: Path) -> list[FeedChoice]:
     return [FeedChoice(**f) for f in data["feeds"]]
 
 
-def fetch(data_dir: Path, today: dt.date, refresh_token: str | None = None, buffer_km: float = config.CORRIDOR_BUFFER_KM) -> list[FeedChoice]:
+def fetch(data_dir: Path, today: dt.date, refresh_token: str | None = None, buffer_km: float = config.CORRIDOR_BUFFER_KM,
+          use_atlas: bool = True) -> list[FeedChoice]:
     api = MobilityDatabase(refresh_token or os.environ.get("REFRESH_TOKEN", ""))
     feeds = discover_feeds(api)
     (data_dir / "catalog.json").parent.mkdir(parents=True, exist_ok=True)
     (data_dir / "catalog.json").write_text(json.dumps(feeds))
     choices, rejected = select_feeds(feeds, today, buffer_km)
     log.info("selected %d feeds (%d rejected)", len(choices), len(rejected))
-    ready = download_feeds(choices, data_dir, today)
+    atlas_feeds = atlas.load(data_dir, config.ATLAS_FALLBACK_FILES) if use_atlas else []
+    ready = download_feeds(choices, data_dir, today, atlas_feeds=atlas_feeds)
+    if use_atlas:
+        have = {c.feed_id for c in ready}
+        ready += [c for c in atlas_extras(atlas_feeds, config.ATLAS_EXTRA_FEEDS, data_dir, today) if c.feed_id not in have]
     write_manifest(ready, rejected, data_dir / "manifest.json")
     zones = fetch_zones(config.FLEX_ARCGIS_SOURCES, data_dir / "flex_zones.geojson")
     log.info("flex zones: %d", len(zones))

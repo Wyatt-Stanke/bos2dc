@@ -17,7 +17,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from .graph import Graph
+from .geo import project
+from .graph import Graph, class_miles
 from .search import Route
 
 DAY = 86400
@@ -32,6 +33,7 @@ class RideOption:
     headsign: str
     dep: np.ndarray  # departures from boarding stop, seconds
     arr: np.ndarray  # arrivals at alighting stop (same trips)
+    miles: np.ndarray  # local / city / express miles between the two stops
 
 
 @dataclass
@@ -42,7 +44,13 @@ class Step:
     label: str
 
 
-def serving_options(g: Graph, u: int, v: int) -> list[RideOption]:
+def serving_options(g: Graph, u: int, v: int, cls: int | None = None) -> list[RideOption]:
+    """Trip patterns that serve u -> v (optionally only those whose dominant
+    stop-density class on that segment is `cls`, matching how ride edges are
+    pooled)."""
+    xy = getattr(g, "_xy", None)
+    if xy is None or len(xy) != g.n:
+        xy = g._xy = project(g.nodes["lat"], g.nodes["lon"])
     opts = []
     for (feed_id, k), nodes in g.pattern_nodes.items():
         iu = np.flatnonzero(nodes == u)
@@ -58,7 +66,11 @@ def serving_options(g: Graph, u: int, v: int) -> list[RideOption]:
             js = iv[(iv > i) & pat.alight[iv]]
             if len(js):
                 j = js[0]
-                opts.append(RideOption(feed_id, k, pat.route_name, pat.agency, pat.headsign, pat.dep[:, i].astype(np.int64), pat.arr[:, j].astype(np.int64)))
+                cum = class_miles(nodes, pat.board, pat.alight, xy)
+                miles = cum[j] - cum[i]
+                if cls is None or int(np.argmax(miles)) == cls:
+                    opts.append(RideOption(feed_id, k, pat.route_name, pat.agency, pat.headsign,
+                                           pat.dep[:, i].astype(np.int64), pat.arr[:, j].astype(np.int64), miles))
                 break
     return opts
 
@@ -68,7 +80,7 @@ class Simulator:
         self.g = g
         self.route = route
         self.slack = transfer_slack_s
-        self.options = [serving_options(g, l.u, l.v) if l.kind == "ride" else None for l in route.legs]
+        self.options = [serving_options(g, l.u, l.v, int(np.argmax(l.miles))) if l.kind == "ride" else None for l in route.legs]
         # A Flex vehicle is assumed to arrive half an equivalent headway after booking.
         self.flex_response = g.params.flex_headway_s // 2
 

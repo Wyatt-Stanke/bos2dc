@@ -34,6 +34,8 @@ class Options:
     max_stale_days: int | None = None
     buffer_km: float = config.CORRIDOR_BUFFER_KM
     workers: int = 3
+    max_walk_m: float | None = None  # None: gap_radius, raised automatically if needed
+    auto_walk: bool = True
     use_flex: bool = False
     flex_files: list[str] = field(default_factory=list)
 
@@ -43,9 +45,11 @@ class Result:
     graph: Graph
     manifest: dict[str, FeedChoice]
     best_threshold: float
-    frontier: list[Route]
+    routes: list[Route]  # labelled: recommended first, then most-local, then trade-offs
     profiles: list[list[tuple[int, int]]]
     simulators: list[Simulator]
+    max_walk_m: float = 0.0
+    walk_note: str = ""
 
 
 def next_weekday(today: dt.date, weekday: int) -> dt.date:
@@ -66,7 +70,9 @@ def load_feeds(opts: Options) -> tuple[list[CompiledFeed], dict[str, FeedChoice]
     jobs = []
     provider_re = config.compile_patterns(config.EXCLUDED_PROVIDER_PATTERNS)
     for c in manifest.values():
-        if c.feed_id in opts.exclude_feed or not c.path or provider_re.search(c.provider):
+        # Hand-picked atlas feeds bypass the provider filter (UConn's feed
+        # carries Windham Region Transit District's public routes).
+        if c.feed_id in opts.exclude_feed or not c.path or (c.source != "atlas-extra" and provider_re.search(c.provider)):
             continue
         if opts.max_stale_days is not None and c.stale and c.service_end:
             age = (opts.date - dt.date.fromisoformat(c.service_end)).days
@@ -115,18 +121,45 @@ def run(opts: Options) -> Result:
         for path in opts.flex_files:
             zones += read_zones(Path(path))
     g = add_flex(g, zones, opts.date)
-    s = Searcher(g, opts.cost)
+
+    max_walk = opts.max_walk_m if opts.max_walk_m is not None else opts.graph.gap_radius_m
+    walk_note = ""
+    s = Searcher(g, opts.cost, max_walk)
+    if not s.reachable(float(s.levels[0])):
+        need = s.required_walk() if opts.auto_walk else None
+        if need is None:
+            raise RuntimeError("Union Station is unreachable from South Station with the loaded feeds.\n" + gap_report(g, max_walk))
+        walk_note = (f"No route exists with walks under {max_walk / 1000:.1f} km; the shortest possible longest walk is "
+                     f"{need / 1000:.2f} km (straight line), so walks up to that length are allowed.")
+        log.info(walk_note)
+        max_walk = need + 1.0
+        s = Searcher(g, opts.cost, max_walk)
     best = s.max_bottleneck()
-    if best == 0:
-        raise RuntimeError("Union Station is unreachable from South Station with the loaded feeds.\n" + gap_report(g))
-    log.info("max bottleneck: %d departures in window", best)
-    frontier = s.frontier(best)
+    log.info("max bottleneck: %.2f effective departures in window", best)
+
+    routes = []
+    rec = s.best_route(best)
+    rec.label = "RECOMMENDED: least frequent leg as frequent as possible (then prefer local stops)"
+    routes.append(rec)
+    local = Searcher(g, CostParams.most_local(wait_factor=opts.cost.wait_factor, board_penalty_s=opts.cost.board_penalty_s,
+                                              walk_factor=opts.cost.walk_factor), max_walk)
+    for thr, label in ((best, "MOST LOCAL at the same weakest-link frequency"),
+                       (float(local.levels[0]), "MOST LOCAL at any frequency")):
+        r = local.best_route(thr)
+        if r is not None and not any(r.nodes == x.nodes for x in routes):
+            r.label = label
+            routes.append(r)
+    for k, r in enumerate(s.frontier(best)[1:], start=1):
+        if not any(r.nodes == x.nodes for x in routes):
+            r.label = f"TRADE-OFF {k}: weaker weakest link for a lower cost"
+            routes.append(r)
+
     sims, profiles = [], []
-    for r in frontier:
+    for r in routes:
         sim = Simulator(g, r)
         sims.append(sim)
         profiles.append(sim.profile())
-    return Result(g, manifest, best, frontier, profiles, sims)
+    return Result(g, manifest, best, routes, profiles, sims, max_walk, walk_note)
 
 
 def route_feeds(g: Graph, r: Route) -> set[str]:
@@ -151,15 +184,16 @@ def summarize_profile(profile) -> dict:
     }
 
 
-def gap_report(g: Graph, top: int = 8) -> str:
+def gap_report(g: Graph, max_walk_m: float = np.inf, top: int = 8) -> str:
     """Where the network breaks: closest pairs of stops between the part
     reachable from the origin and the part that reaches the destination."""
     from scipy.sparse import csr_matrix
     from scipy.sparse.csgraph import breadth_first_order
     from scipy.spatial import cKDTree
 
-    u = np.concatenate([g.ride_u, g.flex_u, g.walk_u])
-    v = np.concatenate([g.ride_v, g.flex_v, g.walk_v])
+    w = g.walk_dist <= max_walk_m
+    u = np.concatenate([g.ride_u, g.flex_u, g.walk_u[w]])
+    v = np.concatenate([g.ride_v, g.flex_v, g.walk_v[w]])
     m = csr_matrix((np.ones(len(u)), (u, v)), shape=(g.n, g.n))
     fw = breadth_first_order(m, g.origin, directed=True, return_predecessors=False)
     bw = breadth_first_order(m.T.tocsr(), g.destination, directed=True, return_predecessors=False)
