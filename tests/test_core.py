@@ -254,3 +254,16 @@ def test_required_walk(tmp_path):
     s2 = Searcher(g, max_walk_m=need + 1)
     r = s2.best_route(s2.max_bottleneck())
     assert 2900 < r.longest_walk_m < 3100
+
+
+def test_chain_evaluation(network):
+    from bos2dc.chain import ChainStep, evaluate_chain
+    from bos2dc.geo import project
+    o = project([ORIGIN.lat], [ORIGIN.lon])[0]
+    d = project([DEST.lat], [DEST.lon])[0]
+    r, problems = evaluate_chain(network, [ChainStep("Agency f1", "FAST"), ChainStep(None, "BX")], o, d)
+    assert not problems
+    assert [l.kind for l in r.legs if l.kind != "walk"] == ["ride", "ride"]
+    assert r.bottleneck_freq == pytest.approx(1)  # the daily FAST bus
+    r, problems = evaluate_chain(network, [ChainStep(None, "FREQ"), ChainStep(None, "BX")], o, d, transfer_walk_m=500)
+    assert r is None and problems  # C and B are ~8.5 km apart

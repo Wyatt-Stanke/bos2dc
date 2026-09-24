@@ -60,6 +60,14 @@ def main(argv: list[str] | None = None) -> int:
     f.add_argument("--no-atlas", action="store_true", help="skip the Transitland Atlas (stale-feed refresh and extra feeds)")
     r = sub.add_parser("route", help="compute route from downloaded feeds")
     _add_route_args(r)
+    ch = sub.add_parser("chain", help="evaluate a given sequence of routes (stop density, frequency, transfers)")
+    _add_route_args(ch)
+    ch.add_argument("routes", nargs="+", help="route names in order; AGENCY_REGEX:ROUTE to pin an agency")
+    ch.add_argument("--agency", help="default agency regex for route names (e.g. 'NJ TRANSIT')")
+    ch.add_argument("--from", dest="start", default="south-station", help="lat,lon or south-station / union-station")
+    ch.add_argument("--to", dest="end", default="union-station", help="lat,lon or south-station / union-station")
+    ch.add_argument("--transfer-walk", type=float, default=800.0, help="metres allowed between consecutive routes")
+    ch.add_argument("--compare", action="store_true", help="also show the minimum-express route between the same points")
     both = sub.add_parser("run", help="fetch if needed, then route")
     _add_route_args(both)
     both.add_argument("--refetch", action="store_true")
@@ -97,6 +105,8 @@ def main(argv: list[str] | None = None) -> int:
         use_flex=args.flex,
         flex_files=args.flex_zones,
     )
+    if args.cmd == "chain":
+        return _chain(args, opts)
     res = pipeline.run(opts)
     print(f"Representative day: {WEEKDAYS[date.weekday()].title()} {date.isoformat()}")
     print(report.text_report(res))
@@ -111,3 +121,36 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
+def _place(text: str) -> config.Place:
+    named = {"south-station": config.SOUTH_STATION, "union-station": config.UNION_STATION}
+    if text in named:
+        return named[text]
+    lat, lon = (float(x) for x in text.split(","))
+    return config.Place(text, lat, lon)
+
+
+def _chain(args, opts) -> int:
+    from . import pipeline
+    from .chain import ChainStep, evaluate_chain, format_route
+    from .geo import project
+    from .search import CostParams, Searcher
+
+    start, end = _place(args.start), _place(args.end)
+    g, _ = pipeline.build(opts, start, end)
+    steps = [ChainStep.parse(t, args.agency) for t in args.routes]
+    oxy = project([start.lat], [start.lon])[0]
+    dxy = project([end.lat], [end.lon])[0]
+    r, problems = evaluate_chain(g, steps, oxy, dxy, opts.cost, transfer_walk_m=args.transfer_walk)
+    print(f"Chain {' → '.join(s.route for s in steps)} from {start.name} to {end.name}")
+    if problems:
+        print("  " + "; ".join(problems))
+    else:
+        print("\n".join(format_route(g, r, steps)))
+    if args.compare:
+        s = Searcher(g, CostParams(city_penalty_s_per_mile=60, express_penalty_s_per_mile=6000), opts.max_walk_m)
+        best = s.best_route(float(s.levels[0]))
+        print(f"\nMinimum-express route between the same points (walks ≤ {s.max_walk_m:.0f} m)")
+        print("\n".join(format_route(g, best)) if best else "  none")
+    return 0 if not problems else 1

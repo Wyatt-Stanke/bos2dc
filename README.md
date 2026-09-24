@@ -31,6 +31,16 @@ Useful options:
 | `--no-auto-walk` | fail with a gap report instead of raising the walk limit |
 | `--flex --flex-headway 60` | allow Flex zones; treat on-demand service like a bus every 60 min |
 | `--exclude-agency REGEX`, `--exclude-feed ID` | drop services |
+
+To check a route sequence you have in mind, the `chain` command picks the
+best transfer points and reports stop density, frequency and time for each
+leg. With `--compare` it also finds the minimum-express route between the
+same two points:
+
+```sh
+bos2dc chain --agency "NJ TRANSIT" --from 40.7570,-73.9903 --to 39.9515,-75.1580 \
+    --transfer-walk 6500 --max-walk 0.8 --compare 119 1 24 48 817 133 130 317
+```
 | `--max-stale-days N` | ignore feeds whose newest data expired more than N days ago |
 
 ## Data
@@ -127,7 +137,8 @@ current producer URL returns 503.
   420, which runs only in the morning peak (effective headway ≈13 h). The
   all-day alternative needs a 7 km walk from Edgewood (Harford LINK) to MTA
   route 59 at Eastern Ave & Biscayne Bay Blvd.
-* **New Jersey.** No all-local chain exists between New York and Philadelphia:
+* **New Jersey.** No all-local chain exists between New York and Philadelphia
+  (`results/nj_chain.txt`):
   New Brunswick and Princeton aren't linked by public fixed routes. Every
   route therefore includes 70+ miles of express-density riding.
 * **Stop density** uses straight-line distances between consecutive stops.

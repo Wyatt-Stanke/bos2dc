@@ -1,0 +1,41 @@
+Chain 119 → 1 → 24 → 48 → 817 → 133 → 130 → 317 from 40.7570,-73.9903 to 39.9515,-75.1580
+  local 37 mi (28%) · city 31 mi (23%) · express 65 mi (48%) · total 134 mi
+  8 boardings · weakest eff. headway 6h53m · in-vehicle 7h20m · expected wait 8h27m · walking 2h26m (longest 6218 m)
+     walk 80 m
+     119                      PORT AUTHORITY BUS TERMINAL        → JFK BLVD AT COMMUNIPAW AVE           6.3 mi = L  3.3 C  1.1 E  2.0 · eff. headway 24m · 47m
+     walk 367 m → COMMUNIPAW AVE AT WEST SIDE AVE
+     1                        COMMUNIPAW AVE AT WEST SIDE AVE    → MARKET ST AT BROAD ST                5.6 mi = L  3.3 C  1.1 E  1.3 · eff. headway 28m · 33m
+     24                       BROAD ST AT MARKET ST              → BROAD ST AT JERSEY ST                5.5 mi = L  5.5 C  0.0 E  0.0 · eff. headway 34m · 32m
+     48                       BROAD ST AT JERSEY ST              → STATE ST AT SMITH ST                18.3 mi = L 15.2 C  3.1 E  0.0 · eff. headway 1h01m · 1h15m
+     walk 55 m → SMITH ST AT NEW BRUNSWICK AVE
+     817                      SMITH ST AT NEW BRUNSWICK AVE      → BROADWAY AT W 3RD ST                10.5 mi = L  4.1 C  1.5 E  4.9 · eff. headway 1h46m · 36m
+     walk 1604 m → LLOYD RD AT LINE RD
+     133                      LLOYD RD AT LINE RD                → COTTRELL RD AT TICETOWN RD#          7.0 mi = L  2.1 C  3.9 E  1.0 · eff. headway 2h39m · 16m
+     walk 6218 m → UNION HILL RD PARK & RIDE
+     130                      UNION HILL RD PARK & RIDE          → LAKEWOOD BUS TERMINAL               18.7 mi = L  0.0 C  8.1 E 10.6 · eff. headway 6h53m · 52m
+     317                      LAKEWOOD BUS TERMINAL              → MARKET ST AT 10TH ST                61.6 mi = L  4.1 C 12.6 E 44.9 · eff. headway 3h04m · 2h27m
+     walk 74 m
+
+Minimum-express route between the same points (walks ≤ 800 m)
+  local 72 mi (44%) · city 39 mi (24%) · express 53 mi (32%) · total 164 mi
+  13 boardings · weakest eff. headway 3h04m · in-vehicle 9h20m · expected wait 7h33m · walking 28m (longest 796 m)
+     walk 80 m → PORT AUTHORITY BUS TERMINAL
+     166                      PORT AUTHORITY BUS TERMINAL        → ENGLE ST AT DEMAREST AVE            12.1 mi = L  9.5 C  0.8 E  1.8 · eff. headway 42m · 54m
+     walk 130 m → N DEAN ST AT E DEMAREST AVE
+     780                      N DEAN ST AT E DEMAREST AVE        → ESSEX ST AT NEWMAN ST                7.5 mi = L  6.2 C  1.3 E  0.0 · eff. headway 35m · 33m
+     76                       ESSEX ST AT NEWMAN ST              → RAYMOND BLVD AT BROAD ST            12.5 mi = L  9.3 C  3.2 E  0.0 · eff. headway 28m · 59m
+     24                       BROAD ST AT ACADEMY ST             → BROAD ST AT JERSEY ST                5.6 mi = L  5.6 C  0.0 E  0.0 · eff. headway 34m · 32m
+     48                       BROAD ST AT JERSEY ST              → STATE ST AT SMITH ST                18.3 mi = L 15.2 C  3.1 E  0.0 · eff. headway 1h01m · 1h15m
+     walk 55 m → SMITH ST AT NEW BRUNSWICK AVE
+     813                      SMITH ST AT NEW BRUNSWICK AVE      → MAIN ST AT WOODBRIDGE AVE, RAIL ST   5.6 mi = L  4.2 C  1.4 E  0.0 · eff. headway 1h07m · 25m
+     810                      MAIN ST AT WOODBRIDGE AVE, RAIL ST → GEORGE ST AT ALBANY ST               5.5 mi = L  2.8 C  1.5 E  1.1 · eff. headway 1h00m · 21m
+     walk 62 m → SOMERSET ST AT GEORGE ST
+     811                      SOMERSET ST AT GEORGE ST           → MALL ENTRANCE NEXT TO AMC THEATERS   8.8 mi = L  5.2 C  3.6 E  0.0 · eff. headway 2h03m · 34m
+     818                      MALL ENTRANCE NEXT TO AMC THEATERS → RT-516 AT BUSHNELL RD                4.0 mi = L  0.5 C  2.5 E  1.1 · eff. headway 1h27m · 11m
+     walk 796 m → RT-9 SERVICE RD AT THROCKMORTON LA
+     139                      RT-9 SERVICE RD AT THROCKMORTON LA → LAKEWOOD BUS TERMINAL               22.8 mi = L  0.3 C 12.0 E 10.5 · eff. headway 1h44m · 58m
+     317                      LAKEWOOD BUS TERMINAL              → RT-38 AT MARTER AVE                 47.6 mi = L  2.0 C  9.1 E 36.5 · eff. headway 3h04m · 1h42m
+     walk 346 m → MARTER AVE AT CENTERTON RD
+     407                      MARTER AVE AT CENTERTON RD         → GATE #5 INSIDE THE WRTC             10.8 mi = L 10.6 C  0.3 E  0.0 · eff. headway 1h00m · 40m
+     313/315/317/400/401/402/ BROADWAY IN FRONT OF WRTC          → MARKET ST AT 10TH ST                 2.7 mi = L  0.9 C  0.0 E  1.7 · eff. headway 15m · 13m
+     walk 74 m → 39.9515,-75.1580

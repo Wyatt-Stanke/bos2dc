@@ -111,16 +111,20 @@ def _apply_agency_exclusions(feeds: list[CompiledFeed], patterns: list[str]) -> 
     return out
 
 
-def run(opts: Options) -> Result:
+def build(opts: Options, origin=config.SOUTH_STATION, destination=config.UNION_STATION) -> tuple[Graph, dict[str, FeedChoice]]:
     feeds, manifest = load_feeds(opts)
     g = build_graph(feeds, opts.graph)
-    g = attach_places(g, config.SOUTH_STATION, config.UNION_STATION)
+    g = attach_places(g, origin, destination)
     zones = []
     if opts.use_flex:
         zones = [z for f in feeds for z in f.flex_zones] + read_zones(opts.data_dir / "flex_zones.geojson")
         for path in opts.flex_files:
             zones += read_zones(Path(path))
-    g = add_flex(g, zones, opts.date)
+    return add_flex(g, zones, opts.date), manifest
+
+
+def run(opts: Options) -> Result:
+    g, manifest = build(opts)
 
     max_walk = opts.max_walk_m if opts.max_walk_m is not None else opts.graph.gap_radius_m
     walk_note = ""
