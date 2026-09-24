@@ -140,3 +140,8 @@ ATLAS_FALLBACK_FILES = [
     "hosted-gtfs-feeds.s3.amazonaws.com.dmfr.json", "nj-transit.dmfr.json", "cttransit.com.dmfr.json",
     "ripta.com.dmfr.json", "trilliumtransit.com.dmfr.json", "massdot.state.ma.us.dmfr.json",
 ]
+
+
+# OpenStreetMap roads are cut to the bounding box of every stop in the loaded
+# feeds (lon0, lat0, lon1, lat1), with a small margin.
+ROADS_BBOX = (-78.75, 37.97, -70.45, 43.30)

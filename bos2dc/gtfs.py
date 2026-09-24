@@ -25,7 +25,7 @@ from .flex import zones_from_gtfs_flex
 
 log = logging.getLogger(__name__)
 
-COMPILE_VERSION = 4
+COMPILE_VERSION = 5
 WEEKDAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
 
 
@@ -176,6 +176,7 @@ class Pattern:
     alight: np.ndarray  # bool, drop-off allowed
     dep: np.ndarray  # int32 seconds after midnight of the service day, (n_trips, L)
     arr: np.ndarray  # int32, (n_trips, L)
+    shape_id: str = ""  # most common shapes.txt shape among the pattern's trips
 
 
 @dataclass
@@ -207,7 +208,7 @@ def compile_feed(zip_path, feed_id: str, provider: str, target: dt.date) -> Comp
     with zipfile.ZipFile(zip_path) as zf:
         agency = read_table(zf, "agency.txt", ["agency_id", "agency_name"], required=False)
         routes = read_table(zf, "routes.txt", ["route_id", "agency_id", "route_short_name", "route_long_name", "route_type"])
-        trips = read_table(zf, "trips.txt", ["route_id", "service_id", "trip_id", "trip_headsign"])
+        trips = read_table(zf, "trips.txt", ["route_id", "service_id", "trip_id", "trip_headsign", "shape_id"])
         cal = Calendar.load(zf)
 
         routes["route_type"] = pd.to_numeric(routes["route_type"], errors="coerce")
@@ -349,6 +350,7 @@ def compile_feed(zip_path, feed_id: str, provider: str, target: dt.date) -> Comp
             alight=(c & 1).astype(bool),
             dep=np.round(d_mat).astype(np.int32),
             arr=np.round(a_mat).astype(np.int32),
+            shape_id=str(tinfo.loc[tids, "shape_id"].mode().iloc[0]).strip(),
         ))
     return out if out.patterns or out.flex_zones else None
 

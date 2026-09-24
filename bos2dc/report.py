@@ -7,7 +7,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .graph import CLASS_NAMES, effective_frequency
+from .graph import effective_frequency
 from .itinerary import fmt_clock, fmt_dur, serving_options
 from .pipeline import Result, route_feeds, summarize_profile
 from .search import Route
@@ -65,17 +65,26 @@ def describe_route(res: Result, r: Route) -> list[dict]:
             )
         else:
             item.update(_ride_stats(res, leg.u, leg.v, int(np.argmax(leg.miles))))
-            item["class_miles"] = {n: round(m, 1) for n, m in zip(CLASS_NAMES, leg.miles)}
+            item["class_miles"] = {n: round(m, 1) for n, m in zip(g.class_names, leg.miles)}
         item["bottleneck"] = leg.kind != "walk" and abs(leg.freq - r.bottleneck_freq) < 0.005
         out.append(item)
     return out
 
 
-def _class_line(r: Route) -> str:
+def _class_line(res: Result, r: Route) -> str:
     m = r.miles
     total = m.sum()
-    parts = [f"{n} {v:.0f} mi ({100 * v / total:.0f}%)" for n, v in zip((*CLASS_NAMES, "flex"), m) if v > 0.05]
+    parts = [f"{n} {v:.0f} mi ({100 * v / total:.0f}%)" for n, v in zip((*res.graph.class_names, "flex"), m) if v > 0.05]
     return " · ".join(parts)
+
+
+def _by_road(res: Result) -> bool:
+    return len(res.graph.class_names) == 4
+
+
+# Short column headers for the summary table.
+_SHORT = {"local": "local", "city": "city", "express": "expr", "1 lane": "1-ln", "2 lanes": "2-ln", "3+ lanes": "3+ln",
+          "controlled access": "CA"}
 
 
 def text_report(res: Result) -> str:
@@ -83,36 +92,39 @@ def text_report(res: Result) -> str:
     lines = [
         f"Frequency window {fmt_clock(p.window_start)}–{fmt_clock(p.window_end)}. Effective headway = 2 × the average wait of",
         "someone arriving at a random moment in the window (the plain headway for evenly spaced service; much",
-        "longer for bunched or peak-only service). Stop density: local ≥ 4 stops/mi, city ≥ 2, else express.",
+        "longer for bunched or peak-only service).",
+        ("Road type (OpenStreetMap): lanes in the bus's direction of travel, or controlled access (freeways and ramps)."
+         if _by_road(res) else "Stop density: local ≥ 4 stops/mi, city ≥ 2, else express."),
     ]
     if res.walk_note:
         lines += ["", "NOTE: " + res.walk_note]
     for i, r in enumerate(res.routes):
         lines += ["", "=" * 100, r.label]
-        lines += _summary(r)
+        lines += _summary(res, r)
         lines += _profile_block(res, i, limit=None if i == 0 else 4)
         lines.append("")
         lines += _legs_table(res, r)
         lines += _data_notes(res, r)
     lines += ["", "=" * 100, "SUMMARY"]
-    lines.append(f"  {'route':<40} {'weakest':>8} {'boards':>6} {'longest':>8} {'local':>6} {'city':>6} {'expr':>6} {'flex':>5} {'exp.time':>9} {'fastest':>8}")
-    lines.append(f"  {'':<40} {'headway':>8} {'':>6} {'walk':>8} {'mi':>6} {'mi':>6} {'mi':>6} {'mi':>5} {'':>9} {'(tt)':>8}")
+    heads = [_SHORT.get(n, n[:5]) for n in (*res.graph.class_names, "flex")]
+    lines.append(f"  {'route':<40} {'weakest':>8} {'boards':>6} {'longest':>8} " + " ".join(f"{h:>5}" for h in heads) + f" {'exp.time':>9} {'fastest':>8}")
+    lines.append(f"  {'':<40} {'headway':>8} {'':>6} {'walk':>8} " + " ".join(f"{'mi':>5}" for _ in heads) + f" {'':>9} {'(tt)':>8}")
     for i, r in enumerate(res.routes):
         prof = summarize_profile(res.profiles[i])
         m = r.miles
         fastest = fmt_dur(prof["min_duration_s"]) if prof["connections"] else "—"
         lines.append(f"  {r.label.split(':')[0][:40]:<40} {_hw(r.bottleneck_headway_s):>8} {r.boardings:>6} "
-                     f"{r.longest_walk_m / 1000:>6.1f}km {m[0]:>6.0f} {m[1]:>6.0f} {m[2]:>6.0f} {m[3]:>5.0f} "
-                     f"{fmt_dur(r.expected_time_s):>9} {fastest:>8}")
+                     f"{r.longest_walk_m / 1000:>6.1f}km " + " ".join(f"{x:>5.0f}" for x in m) +
+                     f" {fmt_dur(r.expected_time_s):>9} {fastest:>8}")
     return "\n".join(lines)
 
 
-def _summary(r: Route) -> list[str]:
+def _summary(res: Result, r: Route) -> list[str]:
     return [
         f"  weakest link: effective headway {_hw(r.bottleneck_headway_s)} · longest walk {r.longest_walk_m / 1000:.1f} km",
         f"  {r.boardings} boardings · in-vehicle {fmt_dur(r.in_vehicle_s)} · walking {fmt_dur(r.walk_s)}"
         f" · expected waiting {fmt_dur(r.expected_wait_s)} · frequency-based trip time {fmt_dur(r.expected_time_s)}",
-        f"  stop density: {_class_line(r)}",
+        f"  {'road type' if _by_road(res) else 'stop density'}: {_class_line(res, r)}",
     ]
 
 
@@ -205,7 +217,7 @@ def to_json(res: Result) -> dict:
                 "walk_s": r.walk_s,
                 "longest_walk_m": r.longest_walk_m,
                 "expected_wait_s": r.expected_wait_s,
-                "miles": dict(zip((*CLASS_NAMES, "flex"), (round(x, 1) for x in r.miles))),
+                "miles": dict(zip((*res.graph.class_names, "flex"), (round(x, 1) for x in r.miles))),
                 "legs": describe_route(res, r),
                 "connections": [[d, a] for d, a in res.profiles[i]],
                 "profile": summarize_profile(res.profiles[i]),

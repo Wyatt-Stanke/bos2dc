@@ -38,6 +38,9 @@ class Options:
     auto_walk: bool = True
     use_flex: bool = False
     flex_files: list[str] = field(default_factory=list)
+    # "roads": locality by road type (OpenStreetMap, see roads.py);
+    # "stops": by stop density.
+    locality: str = "roads"
 
 
 @dataclass
@@ -111,9 +114,21 @@ def _apply_agency_exclusions(feeds: list[CompiledFeed], patterns: list[str]) -> 
     return out
 
 
+def road_index_path(data_dir: Path) -> Path:
+    return data_dir / "osm" / "roads.npz"
+
+
 def build(opts: Options, origin=config.SOUTH_STATION, destination=config.UNION_STATION) -> tuple[Graph, dict[str, FeedChoice]]:
     feeds, manifest = load_feeds(opts)
-    g = build_graph(feeds, opts.graph)
+    by_road = None
+    if opts.locality == "roads":
+        from .roads import classify_feeds
+
+        index = road_index_path(opts.data_dir)
+        if not index.exists():
+            raise RuntimeError(f"no road index at {index}: run `bos2dc roads` first, or use --locality stops")
+        by_road = classify_feeds(feeds, {fid: c.path for fid, c in manifest.items()}, index, opts.data_dir / "roads", opts.workers)
+    g = build_graph(feeds, opts.graph, roads=by_road)
     g = attach_places(g, origin, destination)
     zones = []
     if opts.use_flex:

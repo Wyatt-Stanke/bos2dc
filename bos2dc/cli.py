@@ -1,6 +1,7 @@
 """Command line interface.
 
     bos2dc fetch            discover + download GTFS feeds (Mobility Database + Transitland Atlas)
+    bos2dc roads            download OpenStreetMap extracts and build the road index (for --locality roads)
     bos2dc route            compute the frequency-optimal route from downloaded feeds
     bos2dc run              fetch (if no manifest yet) then route
 """
@@ -18,6 +19,13 @@ from . import catalog, config
 from .graph import GraphParams
 from .gtfs import WEEKDAYS
 from .search import CostParams
+
+
+def _road_penalties(text: str) -> tuple[float, ...]:
+    vals = tuple(float(x) * 60 for x in text.split(","))
+    if len(vals) != 4:
+        raise SystemExit("--road-penalty takes four values: 1 lane, 2 lanes, 3+ lanes, controlled access")
+    return vals
 
 
 def _clock(s: str) -> int:
@@ -43,8 +51,12 @@ def _add_route_args(p: argparse.ArgumentParser) -> None:
     p.add_argument("--flex-headway", type=float, default=60.0, help="minutes: equivalent headway of an on-demand zone")
     p.add_argument("--max-walk", type=float, help="km: longest walk allowed (default: gap radius, raised automatically if nothing connects)")
     p.add_argument("--no-auto-walk", action="store_true", help="fail instead of raising the walk limit when nothing connects")
-    p.add_argument("--city-penalty", type=float, default=1.0, help="minutes added per mile of city-density riding (2-4 stops/mi)")
-    p.add_argument("--express-penalty", type=float, default=3.0, help="minutes added per mile of express riding (<2 stops/mi)")
+    p.add_argument("--locality", choices=("roads", "stops"), default="roads",
+                   help="classify how local a bus is by road type (lanes / controlled access) or by stop density")
+    p.add_argument("--road-penalty", default="0,1,2,4", metavar="M1,M2,M3,MCA",
+                   help="minutes added per mile on roads with 1, 2, 3+ lanes in the bus's direction and on controlled-access roads")
+    p.add_argument("--city-penalty", type=float, default=1.0, help="--locality stops: minutes added per mile of city-density riding (2-4 stops/mi)")
+    p.add_argument("--express-penalty", type=float, default=3.0, help="--locality stops: minutes added per mile of express riding (<2 stops/mi)")
     p.add_argument("--itinerary", metavar="HH:MM", action="append", default=[], help="print a timed itinerary leaving at this time")
     p.add_argument("--out", type=Path, default=Path("out"), help="directory for route.json / route.geojson")
     p.add_argument("--workers", type=int, default=max(1, min(4, (os.cpu_count() or 2) - 1)))
@@ -58,6 +70,8 @@ def main(argv: list[str] | None = None) -> int:
     f = sub.add_parser("fetch", help="download feeds")
     f.add_argument("--buffer-km", type=float, default=config.CORRIDOR_BUFFER_KM)
     f.add_argument("--no-atlas", action="store_true", help="skip the Transitland Atlas (stale-feed refresh and extra feeds)")
+    rd = sub.add_parser("roads", help="download OpenStreetMap extracts and build the road index")
+    rd.add_argument("--pbf", action="append", type=Path, default=[], help="use these .osm.pbf extracts instead of downloading")
     r = sub.add_parser("route", help="compute route from downloaded feeds")
     _add_route_args(r)
     ch = sub.add_parser("chain", help="evaluate a given sequence of routes (stop density, frequency, transfers)")
@@ -77,6 +91,16 @@ def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO if args.verbose else logging.WARNING, format="%(asctime)s %(levelname)s %(message)s")
     today = dt.date.today()
 
+    if args.cmd == "roads":
+        from . import roads
+        from .pipeline import road_index_path
+
+        osm = args.data_dir / "osm"
+        pbfs = args.pbf or roads.ensure_extracts(osm)
+        out = roads.build_index(roads.cut_to_corridor(pbfs, config.ROADS_BBOX, osm), road_index_path(args.data_dir))
+        print(f"road index written to {out}", file=sys.stderr)
+        return 0
+
     if args.cmd == "fetch" or (args.cmd == "run" and (args.refetch or not (args.data_dir / "manifest.json").exists())):
         feeds = catalog.fetch(args.data_dir, today, buffer_km=getattr(args, "buffer_km", config.CORRIDOR_BUFFER_KM),
                               use_atlas=not args.no_atlas)
@@ -95,7 +119,8 @@ def main(argv: list[str] | None = None) -> int:
                           gap_radius_m=args.gap_radius, access_radius_m=args.access_radius,
                           flex_headway_s=int(args.flex_headway * 60)),
         cost=CostParams(wait_factor=args.wait_factor, board_penalty_s=args.board_penalty * 60, walk_factor=args.walk_factor,
-                        city_penalty_s_per_mile=args.city_penalty * 60, express_penalty_s_per_mile=args.express_penalty * 60),
+                        city_penalty_s_per_mile=args.city_penalty * 60, express_penalty_s_per_mile=args.express_penalty * 60,
+                        road_penalties_s_per_mile=_road_penalties(args.road_penalty)),
         max_walk_m=args.max_walk * 1000 if args.max_walk else None,
         auto_walk=not args.no_auto_walk,
         exclude_agency=args.exclude_agency,
@@ -104,6 +129,7 @@ def main(argv: list[str] | None = None) -> int:
         workers=args.workers,
         use_flex=args.flex,
         flex_files=args.flex_zones,
+        locality=args.locality,
     )
     if args.cmd == "chain":
         return _chain(args, opts)
@@ -118,9 +144,6 @@ def main(argv: list[str] | None = None) -> int:
     print(f"\nwrote {args.out / 'route.json'} and {args.out / 'route.geojson'}", file=sys.stderr)
     return 0
 
-
-if __name__ == "__main__":
-    sys.exit(main())
 
 
 def _place(text: str) -> config.Place:
@@ -149,8 +172,14 @@ def _chain(args, opts) -> int:
     else:
         print("\n".join(format_route(g, r, steps)))
     if args.compare:
-        s = Searcher(g, CostParams(city_penalty_s_per_mile=60, express_penalty_s_per_mile=6000), opts.max_walk_m)
+        least = g.class_names[-1]
+        s = Searcher(g, CostParams(city_penalty_s_per_mile=60, express_penalty_s_per_mile=6000,
+                                   road_penalties_s_per_mile=(0, 60, 120, 6000)), opts.max_walk_m)
         best = s.best_route(float(s.levels[0]))
-        print(f"\nMinimum-express route between the same points (walks ≤ {s.max_walk_m:.0f} m)")
+        print(f"\nRoute with the fewest {least} miles between the same points (walks ≤ {s.max_walk_m:.0f} m)")
         print("\n".join(format_route(g, best)) if best else "  none")
     return 0 if not problems else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

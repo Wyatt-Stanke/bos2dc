@@ -98,7 +98,7 @@ class Graph:
     ride_v: np.ndarray
     ride_freq: np.ndarray  # effective departures per window serving u -> v
     ride_time: np.ndarray  # seconds, frequency-weighted mean in-vehicle time
-    ride_miles: np.ndarray  # (n, 3) miles of local / city / express running
+    ride_miles: np.ndarray  # (n, K) miles in each locality class (see class_names)
     # walk edges
     walk_u: np.ndarray
     walk_v: np.ndarray
@@ -119,6 +119,11 @@ class Graph:
     flex_zone: np.ndarray = field(default_factory=lambda: np.zeros(0, np.int64))
     zones: list = field(default_factory=list)
     day: object = None  # representative date (for Flex service hours)
+    # Locality classes of ride_miles: stop density (local / city / express)
+    # or road type (roads.ROAD_CLASS_NAMES). With road classes, the
+    # cumulative miles per class along every pattern are precomputed here.
+    class_names: tuple = ("local", "city", "express")
+    pattern_miles: dict = field(default_factory=dict)  # (feed_id, pattern index) -> (L, K) cumulative miles
 
     @property
     def n(self) -> int:
@@ -151,6 +156,7 @@ def _merge_stops(feeds: list[CompiledFeed]) -> tuple[pd.DataFrame, dict[str, np.
 # local >= 4, city >= 2, express below that.
 LOCAL, CITY, EXPRESS = 0, 1, 2
 CLASS_NAMES = ("local", "city", "express")
+CLASS_ABBREV = {"local": "L", "city": "C", "express": "E", "1 lane": "1L", "2 lanes": "2L", "3+ lanes": "3L+", "controlled access": "CA"}
 LOCAL_MIN_DENSITY = 4.0
 CITY_MIN_DENSITY = 2.0
 DENSITY_WINDOW_MI = 1.0
@@ -193,7 +199,28 @@ def class_miles(nd, board, alight, xy):
     return cum_served[np.maximum(pos, 0)]
 
 
-def _pattern_pairs(nd: np.ndarray, board, alight, dep, arr, xy, p: GraphParams):
+# Road classes used for patterns that have no usable shape: stop density is
+# the only evidence, so local -> 1 lane, city -> 2 lanes, express -> 3+ lanes.
+STOP_TO_ROAD_CLASS = (0, 1, 2)
+
+
+def pattern_cum_miles(g: "Graph", feed_id: str, k: int, nd: np.ndarray, xy: np.ndarray) -> np.ndarray:
+    """Cumulative miles per locality class at each stop of a pattern."""
+    m = g.pattern_miles.get((feed_id, k))
+    if m is not None:
+        return m
+    pat = g.feeds[feed_id].patterns[k]
+    return class_miles(nd, pat.board, pat.alight, xy)
+
+
+def _road_cum(cum_stops: np.ndarray, n_classes: int) -> np.ndarray:
+    out = np.zeros((len(cum_stops), n_classes))
+    for src, dst in enumerate(STOP_TO_ROAD_CLASS):
+        out[:, dst] += cum_stops[:, src]
+    return out
+
+
+def _pattern_pairs(nd: np.ndarray, board, alight, dep, arr, xy, p: GraphParams, cum: np.ndarray | None = None):
     L = len(nd)
     freq = effective_frequency(dep, p.window_start, p.window_end)
     if not freq.any():
@@ -209,35 +236,42 @@ def _pattern_pairs(nd: np.ndarray, board, alight, dep, arr, xy, p: GraphParams):
     ok = board[I] & alight[J] & (freq[I] > 0) & (nd[I] != nd[J])
     I, J = I[ok], J[ok]
     ride = np.maximum(prof_arr[J] - prof_dep[I], 30.0)
-    cum = class_miles(nd, board, alight, xy)
+    if cum is None:
+        cum = class_miles(nd, board, alight, xy)
     miles = cum[J] - cum[I]
     return nd[I], nd[J], freq[I], ride, miles
 
 
 def _aggregate(u, v, freq, time, miles, n):
-    """Pool parallel ride edges that share (u, v) and dominant stop-density
+    """Pool parallel ride edges that share (u, v) and dominant locality
     class: sum frequencies, frequency-weighted mean time and class miles.
     Keeping classes apart lets the search pick a local run over an express
     one on the same stop pair."""
+    K = miles.shape[1]
     cls = np.argmax(miles, axis=1) if len(miles) else np.zeros(0, np.int64)
-    key = (u.astype(np.int64) * n + v) * 3 + cls
+    key = (u.astype(np.int64) * n + v) * K + cls
     uniq, inv = np.unique(key, return_inverse=True)
     f = np.bincount(inv, weights=freq)
     t = np.bincount(inv, weights=time * freq) / f
-    m = np.column_stack([np.bincount(inv, weights=miles[:, k] * freq) / f for k in range(3)])
-    pair = uniq // 3
+    m = np.column_stack([np.bincount(inv, weights=miles[:, k] * freq, minlength=len(uniq)) / f for k in range(K)])
+    pair = uniq // K
     return (pair // n).astype(np.int64), (pair % n).astype(np.int64), f, t, m
 
 
-def _merged_patterns(feeds: list[CompiledFeed], mapping):
-    """Patterns keyed by their node sequence. The same trips published in two
-    feeds (agency mirrors, merged operators) collapse into one pattern with
-    the union of their departures instead of being counted twice."""
+def _merged_patterns(feeds: list[CompiledFeed], mapping, pattern_miles: dict | None = None):
+    """Patterns keyed by their node sequence (and, with road classes, their
+    road-class profile). The same trips published in two feeds (agency
+    mirrors, merged operators) collapse into one pattern with the union of
+    their departures instead of being counted twice."""
     merged: dict[bytes, list] = {}
+    pattern_miles = pattern_miles or {}
     for f in feeds:
-        for pat in f.patterns:
+        for k, pat in enumerate(f.patterns):
             nd = mapping[f.feed_id][pat.stops]
             key = nd.tobytes() + pat.board.tobytes() + pat.alight.tobytes()
+            cum = pattern_miles.get((f.feed_id, k))
+            if cum is not None:
+                key += np.round(cum * 10).astype(np.int32).tobytes()
             if key in merged:
                 m = merged[key]
                 dep = np.vstack([m[3], pat.dep])
@@ -245,20 +279,37 @@ def _merged_patterns(feeds: list[CompiledFeed], mapping):
                 _, keep = np.unique(dep[:, 0], return_index=True)
                 m[3], m[4] = dep[keep], arr[keep]
             else:
-                merged[key] = [nd, pat.board, pat.alight, pat.dep, pat.arr, f.feed_id]
+                merged[key] = [nd, pat.board, pat.alight, pat.dep, pat.arr, f.feed_id, k]
     return merged
 
 
-def build_graph(feeds: list[CompiledFeed], params: GraphParams) -> Graph:
+def build_graph(feeds: list[CompiledFeed], params: GraphParams, roads: dict | None = None) -> Graph:
+    """`roads`: roads.FeedRoads per feed_id to classify by road type
+    (roads.ROAD_CLASS_NAMES); None classifies by stop density."""
     nodes, mapping = _merge_stops(feeds)
     n = len(nodes)
     log.info("graph: %d stops from %d feeds", n, len(feeds))
     pattern_nodes = {(f.feed_id, k): mapping[f.feed_id][pat.stops] for f in feeds for k, pat in enumerate(f.patterns)}
 
     xy = project(nodes["lat"], nodes["lon"])
+    class_names = CLASS_NAMES
+    pattern_miles: dict = {}
+    if roads is not None:
+        from .roads import ROAD_CLASS_NAMES
+
+        class_names = ROAD_CLASS_NAMES
+        for f in feeds:
+            fr = roads.get(f.feed_id)
+            for k, pat in enumerate(f.patterns):
+                cum = fr.cum.get(k) if fr is not None else None
+                if cum is not None:
+                    pattern_miles[(f.feed_id, k)] = cum / METRES_PER_MILE
+                else:
+                    nd = pattern_nodes[(f.feed_id, k)]
+                    pattern_miles[(f.feed_id, k)] = _road_cum(class_miles(nd, pat.board, pat.alight, xy), len(class_names))
     by_feed: dict[str, list] = {}
-    for nd, board, alight, dep, arr, feed_id in _merged_patterns(feeds, mapping).values():
-        res = _pattern_pairs(nd, board, alight, dep.astype(np.int64), arr.astype(np.int64), xy, params)
+    for nd, board, alight, dep, arr, feed_id, k in _merged_patterns(feeds, mapping, pattern_miles).values():
+        res = _pattern_pairs(nd, board, alight, dep.astype(np.int64), arr.astype(np.int64), xy, params, pattern_miles.get((feed_id, k)))
         if res is not None:
             by_feed.setdefault(feed_id, []).append(res)
     parts = []
@@ -270,7 +321,8 @@ def build_graph(feeds: list[CompiledFeed], params: GraphParams) -> Graph:
 
     wu, wv, wt, wd = _walk_edges(nodes, params)
     log.info("graph: %d walk edges", len(wu))
-    return Graph(nodes, ru, rv, rf, rt, rm, wu, wv, wt, wd, params, {f.feed_id: f for f in feeds}, pattern_nodes)
+    return Graph(nodes, ru, rv, rf, rt, rm, wu, wv, wt, wd, params, {f.feed_id: f for f in feeds}, pattern_nodes,
+                 class_names=class_names, pattern_miles=pattern_miles)
 
 
 def _walk_seconds(dist_m, p: GraphParams):

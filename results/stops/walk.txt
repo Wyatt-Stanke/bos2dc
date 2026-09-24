@@ -1,0 +1,557 @@
+Representative day: Wednesday 2026-09-30
+Frequency window 06:00–22:00. Effective headway = 2 × the average wait of
+someone arriving at a random moment in the window (the plain headway for evenly spaced service; much
+longer for bunched or peak-only service). Stop density: local ≥ 4 stops/mi, city ≥ 2, else express.
+
+NOTE: No route exists with walks under 2.5 km; the shortest possible longest walk is 3.96 km (straight line), so walks up to that length are allowed.
+
+====================================================================================================
+RECOMMENDED: least frequent leg as frequent as possible (then prefer local stops)
+  weakest link: effective headway 16h00m · longest walk 4.3 km
+  36 boardings · in-vehicle 28h50m · walking 2h21m · expected waiting 33h47m · frequency-based trip time 65h00m
+  stop density: local 166 mi (32%) · city 91 mi (17%) · express 268 mi (51%)
+  timetable check (same weekday timetable every day): 1 distinct connections per day; door-to-door 73h59m fastest, 73h59m median
+    leave South Station by 10:44 → Union Station 12:43 (+3d)  (73h59m)
+
+   1. walk 81 m (1m) → Essex St @ Atlantic Ave
+   2. MBTA SL4 Nubian Station - South Station
+      Essex St @ Atlantic Ave → Nubian
+      75 departures in window (86 all day, 05:34–00:34 (+1d)) · eff. headway 13m · ride 25m · local 2.0 / city 0.2 mi
+   3. walk 33 m (0m) → Nubian
+   4. MBTA 23 Ashmont Station - Ruggles Station via Washington Street
+      Nubian → Ashmont
+      101 departures in window (122 all day, 04:53–02:25 (+1d)) · eff. headway 10m · ride 30m · local 3.5 mi
+   5. walk 32 m (0m) → Ashmont Station
+   6. Brockton Area Transit Authority 12 Ashmont
+      Ashmont Station → BAT Center
+      38 departures in window (41 all day, 06:00–23:40) · eff. headway 28m · ride 44m · local 11.2 / city 2.5 / express 1.6 mi
+   7. walk 12 m (0m) → BAT Centre
+   8. Brockton Area Transit Authority (BAT) GL Gateway Link
+      BAT Centre → Taunton Terminal
+      9 departures in window (9 all day, 06:00–17:00) · eff. headway 2h37m · ride 1h00m · express 14.5 mi
+   9. walk 23 m (0m) → Taunton Terminal
+  10. Greater Attleboro Taunton Regional Transit Authority 18 Taunton/Norton/Attleboro
+      Taunton Terminal → Attleboro T.C.
+      8 departures in window (11 all day, 04:50–17:25) · eff. headway 3h05m · ride 30m · city 1.4 / express 10.9 mi
+  11. Greater Attleboro Taunton Regional Transit Authority 16 Seekonk/Attleboro
+      Attleboro T.C. → Market Basket
+      13 departures in window (13 all day, 06:00–18:00) · eff. headway 1h45m · ride 24m · city 0.5 / express 5.2 mi
+  12. walk 20 m (0m) → South Attleboro (Bristol Place at Market Basket)
+  13. Rhode Island Public Transit Authority 35 Rumford/Newport Ave (20), Rhode Island Public Transit Authority 1 Eddy St/Hope St/Benefit St (19)
+      South Attleboro (Bristol Place at Market Basket) → Tunnel before S Main
+      39 departures in window (41 all day, 05:30–19:30) · eff. headway 48m · ride 36m · local 7.4 / city 0.6 mi
+  14. walk 338 m (5m) → Exchange Terrace (Kennedy Plaza - Stop X)
+  15. Rhode Island Public Transit Authority 95x Westerly Express
+      Exchange Terrace (Kennedy Plaza - Stop X) → Westerly Railroad Station
+      1 departures in window (1 all day, 16:47–16:47) · eff. headway 16h00m · ride 1h13m · express 38.5 mi   ◀ weakest link
+  16. walk 4332 m (1h15m) → I-95 Commuter Lot (CTDOT)
+  17. Southeast Area Transit District 108 New London To Foxwoods Via Groton & Olde Mistick Village
+      I-95 Commuter Lot (CTDOT) → New London Union Station
+      8 departures in window (9 all day, 07:16–23:16) · eff. headway 2h00m · ride 39m · local 2.9 / city 2.3 / express 10.6 mi
+  18. walk 38 m (0m) → New London Train Station
+  19. River Valley Transit 643 Old Saybrook - New London
+      New London Train Station → Old Saybrook Train Station Bus Shelter
+      6 departures in window (6 all day, 08:00–18:00) · eff. headway 3h30m · ride 50m · local 4.5 / city 4.3 / express 12.3 mi
+  20. River Valley Transit 641 A Old Saybrook - Madison (12), River Valley Transit 641 B Old Saybrook - Madison (10)
+      Old Saybrook Train Station Bus Shelter → Samson Rock Rd & Route 1
+      11 departures in window (11 all day, 06:00–18:00) · eff. headway 2h07m · ride 48m · local 12.7 / city 2.7 / express 0.5 mi
+  21. walk 59 m (1m) → Boston Post Rd @ Durham Rd
+  22. CTTransit- New Haven 201 NEW HAVEN/MADISON
+      Boston Post Rd @ Durham Rd → Church St @ George St
+      19 departures in window (22 all day, 06:00–00:46 (+1d)) · eff. headway 54m · ride 58m · local 10.9 / city 7.0 / express 2.7 mi
+  23. walk 146 m (2m) → Temple St @ Crown St
+  24. CTTransit- New Haven 261 BOSTON POST RD (46), CTTransit- New Haven 271 KIMBERLY AVE (13)
+      Temple St @ Crown St → East Town Rd @ Milford Shops
+      59 departures in window (63 all day, 05:15–23:46) · eff. headway 21m · ride 42m · local 8.7 / city 0.7 mi
+  25. walk 21 m (0m) → East Town Rd. at Westfield Ct Post Mall (Front Entry)
+  26. Greater Bridgeport Transit CL Coastal Link
+      East Town Rd. at Westfield Ct Post Mall (Front Entry) → Burnell Blvd. at Norwalk Wheel Hub
+      28 departures in window (29 all day, 05:53–20:56) · eff. headway 39m · ride 1h50m · local 22.0 / city 2.1 mi
+  27. walk 15 m (0m) → Burnell Blvd @ opp River St
+  28. CTTransit- Stamford 341 STAMFORD/NORWALK
+      Burnell Blvd @ opp River St → Atlantic St @ Main St
+      36 departures in window (40 all day, 05:34–23:51) · eff. headway 30m · ride 43m · local 8.8 / city 0.4 mi
+  29. walk 24 m (0m) → Main St @ Atlantic St
+  30. CTTransit- Stamford 971 STAMFORD/WHITE PLAINS
+      Main St @ Atlantic St → Martine Ave @ Mamaronek Ave
+      22 departures in window (23 all day, 05:30–21:05) · eff. headway 53m · ride 30m · local 1.2 / city 0.1 / express 11.2 mi
+  31. walk 45 m (0m) → MAMARONECK AVENUE @ MARTINE AVENUE
+  32. Bee-Line Bus 0060 60 -BRONX-NEW ROCHELLE-WHITE PLAINS
+      MAMARONECK AVENUE @ MARTINE AVENUE → BOSTON RD @ WARING AVE
+      29 departures in window (30 all day, 05:53–21:14) · eff. headway 35m · ride 1h24m · local 10.4 / city 5.7 mi
+  33. walk 58 m (1m) → WHITE PLAINS RD/WARING AV
+  34. MTA Bus Company BxM11 Wakefield - Midtown
+      WHITE PLAINS RD/WARING AV → 5 AV/W 43 ST
+      37 departures in window (41 all day, 05:33–23:18) · eff. headway 31m · ride 1h02m · city 1.9 / express 7.7 mi
+  35. walk 69 m (1m) → W 42 ST/5 AV
+  36. MTA New York City Transit M42 United Nations - W 42 St Pier
+      W 42 ST/5 AV → W 42 ST/7 AV
+      123 departures in window (140 all day, 01:30–01:06 (+1d)) · eff. headway 8m · ride 3m · local 0.4 mi
+  37. walk 283 m (4m) → PORT AUTHORITY BUS TERMINAL
+  38. NJ TRANSIT BUS 139 (29), NJ TRANSIT BUS 136 (13), NJ TRANSIT BUS 130 (7), NJ TRANSIT BUS 137 (2)
+      PORT AUTHORITY BUS TERMINAL → LAKEWOOD BUS TERMINAL
+      42 departures in window (53 all day, 04:00–02:30 (+1d)) · eff. headway 25m · ride 1h42m · local 0.2 / city 11.7 / express 40.6 mi
+  39. NJ TRANSIT BUS 317
+      LAKEWOOD BUS TERMINAL → MARKET ST AT 10TH ST
+      6 departures in window (7 all day, 09:50–23:03) · eff. headway 3h04m · ride 2h27m · local 4.1 / city 12.6 / express 44.9 mi
+  40. walk 357 m (6m) → Walnut St & 11th St
+  41. SEPTA 21 Columbus-Dock to 69th St TC
+      Walnut St & 11th St → 69th St Transit Center South Terminal
+      90 departures in window (101 all day, 06:16–02:31 (+1d)) · eff. headway 11m · ride 42m · local 5.5 mi
+  42. walk 9 m (0m) → 69th St TC South Berth 4
+  43. SEPTA 113 Claymont TC to 69th St Transit Ctr
+      69th St TC South Berth 4 → Claymont Transit Center
+      23 departures in window (31 all day, 03:10–22:10) · eff. headway 46m · ride 1h23m · local 15.7 / city 2.0 / express 0.8 mi
+  44. walk 659 m (11m) → PHILADELPHIA PK @ OP ARCHMERE ACADEMY
+  45. Dart First State 013 Philadelphia Pike / Market St
+      PHILADELPHIA PK @ OP ARCHMERE ACADEMY → KING ST @ 10TH ST (LIBRARY)
+      32 departures in window (38 all day, 04:30–22:45) · eff. headway 30m · ride 28m · local 6.5 mi
+  46. walk 34 m (0m) → 10TH ST @ KING ST (RODNEY SQUARE)
+  47. Dart First State 006 Kirkwood Highway
+      10TH ST @ KING ST (RODNEY SQUARE) → NEWARK TRANSIT HUB (FARMER LANE)
+      43 departures in window (47 all day, 04:32–22:52) · eff. headway 25m · ride 54m · local 11.3 / city 1.8 mi
+  48. walk 11 m (0m) → Newark Transit Hub
+  49. Cecil Transit New Newark
+      Newark Transit Hub → Cecil College - Elkton Station
+      10 departures in window (10 all day, 06:50–21:34) · eff. headway 1h37m · ride 29m · city 1.8 / express 6.9 mi
+  50. Cecil Transit XC Cross-County Connection
+      Cecil College - Elkton Station → Lindy's Market - Aiken Ave
+      10 departures in window (11 all day, 05:35–18:29) · eff. headway 2h06m · ride 57m · local 0.5 / city 4.1 / express 15.8 mi
+  51. walk 102 m (1m) → White Horse Apartments (Pulaski Hwy/US 40)
+  52. Harford Transit LINK 5 Teal
+      White Horse Apartments (Pulaski Hwy/US 40) → Aberdeen Train Station (Pulaski Hwy/US 40)
+      12 departures in window (12 all day, 06:37–19:58) · eff. headway 1h28m · ride 19m · local 0.7 / city 3.0 / express 3.3 mi
+  53. walk 523 m (9m) → US 40 & PLATER ST wb
+  54. Maryland Transit Administration 420 HAVRE DE GRACE - HOPKINS
+      US 40 & PLATER ST wb → HOWARD ST & PRATT ST ns (CONVENTION CENTER)
+      3 departures in window (4 all day, 05:35–07:15) · eff. headway 13h39m · ride 1h05m · city 0.5 / express 29.3 mi
+  55. walk 371 m (6m) → GREENE ST & PRATT ST sb
+  56. Maryland Transit Administration 73 State Center - Patapsco Station
+      GREENE ST & PRATT ST sb → VIRGINIA AVE & ANNAPOLIS RD mb eb
+      25 departures in window (32 all day, 05:26–01:08 (+1d)) · eff. headway 41m · ride 20m · local 2.7 / city 1.7 mi
+  57. walk 39 m (0m) → ANNAPOLIS RD & VIRGINIA AVE fs sb
+  58. Maryland Transit Administration 75 Patapsco Station - Arundel Mills
+      ANNAPOLIS RD & VIRGINIA AVE fs sb → ARUNDEL MILLS SHOPPING CENTER
+      26 departures in window (30 all day, 04:59–00:22 (+1d)) · eff. headway 39m · ride 58m · local 3.0 / city 6.8 / express 5.2 mi
+  59. walk 13 m (0m) → Arundel Mills Mall
+  60. Regional Transportation Agency of Central Maryland 502 Laurel / Arundel Mills
+      Arundel Mills Mall → Baltimore Ave / Centre at Laurel (Northbound)
+      17 departures in window (18 all day, 06:00–22:00) · eff. headway 57m · ride 40m · local 1.0 / city 6.6 / express 4.2 mi
+  61. walk 212 m (3m) → Baltimore Av+Contee Rd
+  62. WMATA P12 Laurel-Greenbelt
+      Baltimore Av+Contee Rd → Baltimore Av+Montgomery Rd
+      19 departures in window (21 all day, 05:36–22:30) · eff. headway 51m · ride 14m · local 0.5 / city 3.3 / express 1.0 mi
+  63. WMATA M44 Randolph Rd-Hyattsville Crossing
+      Baltimore Av+Montgomery Rd → Baltimore Av+Tuckerman St
+      32 departures in window (35 all day, 05:12–22:15) · eff. headway 30m · ride 20m · local 3.6 / city 0.9 mi
+  64. WMATA P1X Baltimore Av Limited
+      Baltimore Av+Tuckerman St → Rhode Island Av NE+18 St NE
+      48 departures in window (53 all day, 05:45–23:18) · eff. headway 20m · ride 17m · local 1.2 / city 2.5 mi
+  65. walk 63 m (1m) → 18 St NE+Hamlin St NE
+  66. WMATA C71 18 St
+      18 St NE+Hamlin St NE → Massachusetts Av NE+1 St NE
+      39 departures in window (44 all day, 06:23–00:21 (+1d)) · eff. headway 26m · ride 30m · local 3.3 mi
+  67. walk 152 m (2m) → Washington Union Station
+  data notes:
+  ⚠ Westchester County Bee-Line System (WCDOT) (mdb-2353): newest data ends 2025-09-01; timetable of 2025-08-27 used
+  · Greater Attleboro Taunton Regional Transit Authority (GATRA) (mdb-418): catalog copy stale; using transitland-atlas f-drm-thegreaterattleborotauntonregionaltransitauthority URL
+  · Harford Transit LINK (mdb-501): catalog copy stale; using transitland-atlas f-dr1b-harfordtransitlink URL
+
+====================================================================================================
+MOST LOCAL at the same weakest-link frequency
+  weakest link: effective headway 16h00m · longest walk 4.3 km
+  40 boardings · in-vehicle 30h57m · walking 2h33m · expected waiting 35h34m · frequency-based trip time 69h06m
+  stop density: local 211 mi (40%) · city 82 mi (16%) · express 231 mi (44%)
+  timetable check (same weekday timetable every day): 1 distinct connections per day; door-to-door 74h04m fastest, 74h04m median
+    leave South Station by 10:44 → Union Station 12:48 (+3d)  (74h04m)
+
+   1. walk 81 m (1m) → Essex St @ Atlantic Ave
+   2. MBTA SL4 Nubian Station - South Station
+      Essex St @ Atlantic Ave → Nubian
+      75 departures in window (86 all day, 05:34–00:34 (+1d)) · eff. headway 13m · ride 25m · local 2.0 / city 0.2 mi
+   3. walk 33 m (0m) → Nubian
+   4. MBTA 23 Ashmont Station - Ruggles Station via Washington Street
+      Nubian → Ashmont
+      101 departures in window (122 all day, 04:53–02:25 (+1d)) · eff. headway 10m · ride 30m · local 3.5 mi
+   5. walk 32 m (0m) → Ashmont Station
+   6. Brockton Area Transit Authority 12 Ashmont
+      Ashmont Station → BAT Center
+      38 departures in window (41 all day, 06:00–23:40) · eff. headway 28m · ride 44m · local 11.2 / city 2.5 / express 1.6 mi
+   7. Brockton Area Transit Authority 9 Pearl via W Elm & Torrey
+      BAT Center → Belmont St at Stonehill College
+      31 departures in window (31 all day, 06:20–21:30) · eff. headway 31m · ride 15m · local 4.4 mi
+   8. walk 11 m (0m) → Belmont St at Stonehill College
+   9. Brockton Area Transit Authority (BAT) GL Gateway Link
+      Belmont St at Stonehill College → Taunton Terminal
+      9 departures in window (9 all day, 06:20–17:20) · eff. headway 2h37m · ride 40m · express 10.7 mi
+  10. walk 23 m (0m) → Taunton Terminal
+  11. Greater Attleboro Taunton Regional Transit Authority 18 Taunton/Norton/Attleboro
+      Taunton Terminal → Attleboro T.C.
+      8 departures in window (11 all day, 04:50–17:25) · eff. headway 3h05m · ride 30m · city 1.4 / express 10.9 mi
+  12. Greater Attleboro Taunton Regional Transit Authority 16 Seekonk/Attleboro
+      Attleboro T.C. → Market Basket
+      13 departures in window (13 all day, 06:00–18:00) · eff. headway 1h45m · ride 24m · city 0.5 / express 5.2 mi
+  13. walk 20 m (0m) → South Attleboro (Bristol Place at Market Basket)
+  14. Rhode Island Public Transit Authority 35 Rumford/Newport Ave (20), Rhode Island Public Transit Authority 1 Eddy St/Hope St/Benefit St (19)
+      South Attleboro (Bristol Place at Market Basket) → Tunnel before S Main
+      39 departures in window (41 all day, 05:30–19:30) · eff. headway 48m · ride 36m · local 7.4 / city 0.6 mi
+  15. walk 338 m (5m) → Exchange Terrace (Kennedy Plaza - Stop X)
+  16. Rhode Island Public Transit Authority 95x Westerly Express
+      Exchange Terrace (Kennedy Plaza - Stop X) → Westerly Railroad Station
+      1 departures in window (1 all day, 16:47–16:47) · eff. headway 16h00m · ride 1h13m · express 38.5 mi   ◀ weakest link
+  17. walk 4332 m (1h15m) → I-95 Commuter Lot (CTDOT)
+  18. Southeast Area Transit District 108 New London To Foxwoods Via Groton & Olde Mistick Village
+      I-95 Commuter Lot (CTDOT) → New London Union Station
+      8 departures in window (9 all day, 07:16–23:16) · eff. headway 2h00m · ride 39m · local 2.9 / city 2.3 / express 10.6 mi
+  19. walk 38 m (0m) → New London Train Station
+  20. River Valley Transit 643 Old Saybrook - New London
+      New London Train Station → Old Saybrook Train Station Bus Shelter
+      6 departures in window (6 all day, 08:00–18:00) · eff. headway 3h30m · ride 50m · local 4.5 / city 4.3 / express 12.3 mi
+  21. River Valley Transit 641 A Old Saybrook - Madison (12), River Valley Transit 641 B Old Saybrook - Madison (10)
+      Old Saybrook Train Station Bus Shelter → Samson Rock Rd & Route 1
+      11 departures in window (11 all day, 06:00–18:00) · eff. headway 2h07m · ride 48m · local 12.7 / city 2.7 / express 0.5 mi
+  22. walk 59 m (1m) → Boston Post Rd @ Durham Rd
+  23. CTTransit- New Haven 201 NEW HAVEN/MADISON
+      Boston Post Rd @ Durham Rd → Church St @ George St
+      19 departures in window (22 all day, 06:00–00:46 (+1d)) · eff. headway 54m · ride 58m · local 10.9 / city 7.0 / express 2.7 mi
+  24. walk 146 m (2m) → Temple St @ Crown St
+  25. CTTransit- New Haven 261 BOSTON POST RD (46), CTTransit- New Haven 271 KIMBERLY AVE (13)
+      Temple St @ Crown St → East Town Rd @ Milford Shops
+      59 departures in window (63 all day, 05:15–23:46) · eff. headway 21m · ride 42m · local 8.7 / city 0.7 mi
+  26. walk 21 m (0m) → East Town Rd. at Westfield Ct Post Mall (Front Entry)
+  27. Greater Bridgeport Transit CL Coastal Link
+      East Town Rd. at Westfield Ct Post Mall (Front Entry) → Burnell Blvd. at Norwalk Wheel Hub
+      28 departures in window (29 all day, 05:53–20:56) · eff. headway 39m · ride 1h50m · local 22.0 / city 2.1 mi
+  28. walk 15 m (0m) → Burnell Blvd @ opp River St
+  29. CTTransit- Stamford 341 STAMFORD/NORWALK
+      Burnell Blvd @ opp River St → Atlantic St @ Main St
+      36 departures in window (40 all day, 05:34–23:51) · eff. headway 30m · ride 43m · local 8.8 / city 0.4 mi
+  30. walk 347 m (6m) → Tresser Blvd @ Washington Blvd
+  31. CTTransit- Stamford 311 STAMFORD/PORT CHESTER
+      Tresser Blvd @ Washington Blvd → S Main St @ Westchester Ave
+      32 departures in window (35 all day, 05:11–23:12) · eff. headway 34m · ride 50m · local 6.7 / city 1.9 mi
+  32. walk 4 m (0m) → S MAIN ST @ WESTCHESTER AVE
+  33. Bee-Line Bus 0061 61 -BRONX-NEW ROCHELLE-PORT CHESTER
+      S MAIN ST @ WESTCHESTER AVE → FORDHAM RD @ SOUTHERN BLVD
+      18 departures in window (18 all day, 06:15–17:57) · eff. headway 1h43m · ride 1h38m · local 11.2 / city 5.3 mi
+  34. walk 137 m (2m) → SOUTHERN BLVD/EAST FORDHAM RD
+  35. MTA New York City Transit Bx19 NY Botanical Garden - Riverbank Park
+      SOUTHERN BLVD/EAST FORDHAM RD → W 145 ST/MALCOLM X BLVD
+      122 departures in window (144 all day, 00:17–23:57) · eff. headway 8m · ride 57m · local 5.2 mi
+  36. walk 24 m (0m) → MALCOLM X BLVD/W 145 ST
+  37. MTA New York City Transit M7 Harlem - 14th Street
+      MALCOLM X BLVD/W 145 ST → 7 AV/W 41 ST
+      79 departures in window (95 all day, 00:30–00:00 (+1d)) · eff. headway 13m · ride 1h10m · local 5.8 mi
+  38. walk 305 m (5m) → PORT AUTHORITY BUS TERMINAL
+  39. NJ TRANSIT BUS 139 (29), NJ TRANSIT BUS 136 (13), NJ TRANSIT BUS 130 (7), NJ TRANSIT BUS 137 (2)
+      PORT AUTHORITY BUS TERMINAL → LAKEWOOD BUS TERMINAL
+      42 departures in window (53 all day, 04:00–02:30 (+1d)) · eff. headway 25m · ride 1h42m · local 0.2 / city 11.7 / express 40.6 mi
+  40. NJ TRANSIT BUS 317
+      LAKEWOOD BUS TERMINAL → RT-38 AT MARTER AVE
+      6 departures in window (7 all day, 09:50–23:03) · eff. headway 3h04m · ride 1h42m · local 2.0 / city 9.1 / express 36.5 mi
+  41. walk 346 m (6m) → MARTER AVE AT CENTERTON RD
+  42. NJ TRANSIT BUS 407
+      MARTER AVE AT CENTERTON RD → GATE #5 INSIDE THE WRTC
+      18 departures in window (20 all day, 05:34–22:08) · eff. headway 1h00m · ride 40m · local 10.6 / city 0.3 mi
+  43. walk 44 m (0m) → BROADWAY IN FRONT OF WRTC
+  44. NJ TRANSIT BUS 551 (23), NJ TRANSIT BUS 409 (11), NJ TRANSIT BUS 408 (9), NJ TRANSIT BUS 400 (8)
+      BROADWAY IN FRONT OF WRTC → MARKET ST AT 10TH ST
+      83 departures in window (101 all day, 04:33–03:23 (+1d)) · eff. headway 19m · ride 13m · local 0.9 / express 1.7 mi
+  45. walk 357 m (6m) → Walnut St & 11th St
+  46. SEPTA 21 Columbus-Dock to 69th St TC
+      Walnut St & 11th St → 69th St Transit Center South Terminal
+      90 departures in window (101 all day, 06:16–02:31 (+1d)) · eff. headway 11m · ride 42m · local 5.5 mi
+  47. walk 9 m (0m) → 69th St TC South Berth 4
+  48. SEPTA 113 Claymont TC to 69th St Transit Ctr
+      69th St TC South Berth 4 → Ridge Av & Parkway Av - FS
+      23 departures in window (31 all day, 03:10–22:10) · eff. headway 46m · ride 1h20m · local 15.7 / city 2.0 mi
+  49. walk 415 m (7m) → Naamans Rd @ Ridge Rd - WB
+  50. Dart First State 013 Philadelphia Pike / Market St
+      Naamans Rd @ Ridge Rd - WB → KING ST @ 10TH ST (LIBRARY)
+      32 departures in window (38 all day, 04:21–22:36) · eff. headway 30m · ride 40m · local 7.8 / city 1.8 mi
+  51. walk 34 m (0m) → 10TH ST @ KING ST (RODNEY SQUARE)
+  52. Dart First State 006 Kirkwood Highway
+      10TH ST @ KING ST (RODNEY SQUARE) → NEWARK TRANSIT HUB (FARMER LANE)
+      43 departures in window (47 all day, 04:32–22:52) · eff. headway 25m · ride 54m · local 11.3 / city 1.8 mi
+  53. walk 11 m (0m) → Newark Transit Hub
+  54. Cecil Transit New Newark
+      Newark Transit Hub → Cecil College - Elkton Station
+      10 departures in window (10 all day, 06:50–21:34) · eff. headway 1h37m · ride 29m · city 1.8 / express 6.9 mi
+  55. Cecil Transit XC Cross-County Connection
+      Cecil College - Elkton Station → NE - Walgreens/Food Lion
+      10 departures in window (11 all day, 05:35–18:29) · eff. headway 2h06m · ride 16m · local 0.3 / city 1.1 / express 5.1 mi
+  56. walk 440 m (7m) → Rt 40 - Across from Stony Run
+  57. Cecil Transit XC Cross-County Connection
+      Rt 40 - Across from Stony Run → Lindy's Market - Aiken Ave
+      12 departures in window (12 all day, 06:15–20:00) · eff. headway 1h28m · ride 17m · city 1.2 / express 5.4 mi
+  58. walk 102 m (1m) → White Horse Apartments (Pulaski Hwy/US 40)
+  59. Harford Transit LINK 5 Teal
+      White Horse Apartments (Pulaski Hwy/US 40) → Aberdeen Train Station (Pulaski Hwy/US 40)
+      12 departures in window (12 all day, 06:37–19:58) · eff. headway 1h28m · ride 19m · local 0.7 / city 3.0 / express 3.3 mi
+  60. walk 523 m (9m) → US 40 & PLATER ST wb
+  61. Maryland Transit Administration 420 HAVRE DE GRACE - HOPKINS
+      US 40 & PLATER ST wb → CHARLES ST & FAYETTE ST nb
+      3 departures in window (4 all day, 05:35–07:15) · eff. headway 13h39m · ride 1h10m · local 0.4 / city 0.5 / express 29.3 mi
+  62. walk 103 m (1m) → FAYETTE ST PLAZA wb
+  63. Maryland Transit Administration CityLink PURPLE City Hall - Paradise/Catonsville
+      FAYETTE ST PLAZA wb → Rolling Rd & Baltimore National Pike
+      37 departures in window (44 all day, 04:18–03:08 (+1d)) · eff. headway 28m · ride 46m · local 8.8 / city 0.6 mi
+  64. walk 5 m (0m) → Walmart at Catonsville
+  65. Regional Transportation Agency of Central Maryland 505 Columbia / Catonsville
+      Walmart at Catonsville → Mall in Columbia
+      15 departures in window (15 all day, 07:00–21:00) · eff. headway 1h07m · ride 45m · local 0.6 / city 1.9 / express 7.4 mi
+  66. Regional Transportation Agency of Central Maryland 503 Laurel / Columbia
+      Mall in Columbia → 7th St / Main St (Southbound)
+      15 departures in window (15 all day, 06:00–20:00) · eff. headway 1h07m · ride 47m · local 4.6 / city 7.9 / express 1.0 mi
+  67. walk 172 m (2m) → Main St+6 St
+  68. WMATA P12 Laurel-Greenbelt
+      Main St+6 St → Baltimore Av+Montgomery Rd
+      19 departures in window (21 all day, 05:26–22:20) · eff. headway 51m · ride 26m · local 1.8 / city 4.5 / express 1.0 mi
+  69. WMATA M44 Randolph Rd-Hyattsville Crossing
+      Baltimore Av+Montgomery Rd → Hyattsville Crossing+Bay B
+      32 departures in window (35 all day, 05:12–22:15) · eff. headway 30m · ride 27m · local 4.6 / city 0.9 mi
+  70. walk 42 m (0m) → Hyattsville Crossing+Bus Bay F
+  71. WMATA P33 Queens Chapel Rd
+      Hyattsville Crossing+Bus Bay F → Brookland-CUA+Bay A
+      44 departures in window (50 all day, 05:07–23:25) · eff. headway 22m · ride 25m · local 3.7 mi
+  72. walk 52 m (0m) → Brookland-CUA+Bay J
+  73. WMATA D30 N Capitol St
+      Brookland-CUA+Bay J → N Capitol St NE+Massachusetts Av NE
+      63 departures in window (88 all day, 00:49–00:28 (+1d)) · eff. headway 15m · ride 21m · local 2.9 mi
+  74. walk 240 m (4m) → Washington Union Station
+  data notes:
+  ⚠ Westchester County Bee-Line System (WCDOT) (mdb-2353): newest data ends 2025-09-01; timetable of 2025-08-27 used
+  · Greater Attleboro Taunton Regional Transit Authority (GATRA) (mdb-418): catalog copy stale; using transitland-atlas f-drm-thegreaterattleborotauntonregionaltransitauthority URL
+  · Harford Transit LINK (mdb-501): catalog copy stale; using transitland-atlas f-dr1b-harfordtransitlink URL
+
+====================================================================================================
+SUMMARY
+  route                                     weakest boards  longest  local   city   expr  flex  exp.time  fastest
+                                            headway            walk     mi     mi     mi    mi               (tt)
+  RECOMMENDED                                16h00m     36    4.3km    166     91    268     0    65h00m   73h59m
+  MOST LOCAL at the same weakest-link freq   16h00m     40    4.3km    211     82    231     0    69h06m   74h04m
+
+RECOMMENDED — leaving South Station at 07:00:
+          07:00–07:01         walk to Essex St @ Atlantic Ave
+                              wait 10m
+          07:12–07:35         MBTA SL4 Nubian Station - South Station toward Nubian
+          07:35–07:35         walk to Nubian
+                              wait 7m
+          07:43–08:14         MBTA 23 Ashmont Station - Ruggles Station via Washington Street toward Ashmont
+          08:14–08:14         walk to Ashmont Station
+                              wait 15m
+          08:30–09:15         Brockton Area Transit Authority 12 Ashmont toward Brockton
+          09:15–09:15         walk to BAT Centre
+                              wait 44m
+          10:00–11:00         Brockton Area Transit Authority (BAT) GL Gateway Link toward Fall River - SRTA Terminal
+          11:00–11:00         walk to Taunton Terminal
+                              wait 1h24m
+          12:25–12:56         Greater Attleboro Taunton Regional Transit Authority 18 Taunton/Norton/Attleboro toward Attleboro T.C.
+                              wait 4m
+          13:00–13:24         Greater Attleboro Taunton Regional Transit Authority 16 Seekonk/Attleboro toward Market Basket
+          13:24–13:24         walk to South Attleboro (Bristol Place at Market Basket)
+                              wait 10m
+          13:35–14:12         Rhode Island Public Transit Authority 35 Rumford/Newport Ave toward Kennedy Plaza
+          14:12–14:17         walk to Exchange Terrace (Kennedy Plaza - Stop X)
+                              wait 2h29m
+          16:47–18:00         Rhode Island Public Transit Authority 95x Westerly Express toward Westerly
+          18:00–19:15         walk to I-95 Commuter Lot (CTDOT)
+                              wait 2h00m
+          21:16–21:55         Southeast Area Transit District 108 New London To Foxwoods Via Groton & Olde Mistick Village toward New London via Groton and Olde Mistick Village
+          21:55–21:55         walk to New London Train Station
+                              wait 10h04m
+    08:00 (+1d)–08:50 (+1d)   River Valley Transit 643 Old Saybrook - New London toward Old Saybrook Rt 1 & Shore Rd
+                              wait 10m
+    09:00 (+1d)–09:48 (+1d)   River Valley Transit 641 B Old Saybrook - Madison toward Madison Route 1
+    09:48 (+1d)–09:49 (+1d)   walk to Boston Post Rd @ Durham Rd
+                              wait 17m
+    10:06 (+1d)–11:04 (+1d)   CTTransit- New Haven 201 NEW HAVEN/MADISON toward 201 - New Haven
+    11:04 (+1d)–11:06 (+1d)   walk to Temple St @ Crown St
+                              wait 14m
+    11:21 (+1d)–12:01 (+1d)   CTTransit- New Haven 261 BOSTON POST RD toward 261 - CT Post Mall
+    12:01 (+1d)–12:01 (+1d)   walk to East Town Rd. at Westfield Ct Post Mall (Front Entry)
+                              wait 21m
+    12:23 (+1d)–14:15 (+1d)   Greater Bridgeport Transit CL Coastal Link toward NORWALK WHEELS HUB X
+    14:15 (+1d)–14:15 (+1d)   walk to Burnell Blvd @ opp River St
+                              wait 9m
+    14:25 (+1d)–15:11 (+1d)   CTTransit- Stamford 341 STAMFORD/NORWALK toward 341C - Stamford via CT State Norwalk
+    15:11 (+1d)–15:11 (+1d)   walk to Main St @ Atlantic St
+                              wait 23m
+    15:35 (+1d)–16:06 (+1d)   CTTransit- Stamford 971 STAMFORD/WHITE PLAINS toward 971 - White Plains Express
+    16:06 (+1d)–16:07 (+1d)   walk to MAMARONECK AVENUE @ MARTINE AVENUE
+                              wait 3m
+    16:11 (+1d)–17:49 (+1d)   Bee-Line Bus 0060 60 -BRONX-NEW ROCHELLE-WHITE PLAINS toward Fordham
+    17:49 (+1d)–17:50 (+1d)   walk to WHITE PLAINS RD/WARING AV
+                              wait 30m
+    18:21 (+1d)–19:15 (+1d)   MTA Bus Company BxM11 Wakefield - Midtown toward EAST MIDTOWN 23 ST via BRONX ZOO via 5 AV
+    19:15 (+1d)–19:17 (+1d)   walk to W 42 ST/5 AV
+                              wait 11m
+    19:28 (+1d)–19:33 (+1d)   MTA New York City Transit M42 United Nations - W 42 St Pier toward WEST SIDE PIER 12 AV CROSSTOWN
+    19:33 (+1d)–19:37 (+1d)   walk to PORT AUTHORITY BUS TERMINAL
+                              wait 7m
+    19:45 (+1d)–21:22 (+1d)   NJ TRANSIT BUS 139 toward 139 LAKEWOOD VIA FRHLD MAL
+                              wait 1h41m
+    23:03 (+1d)–01:16 (+2d)   NJ TRANSIT BUS 317 toward 317 PHILADELPHIA ROWAN COL
+    01:16 (+2d)–01:22 (+2d)   walk to Walnut St & 11th St
+                              wait 3m
+    01:26 (+2d)–01:53 (+2d)   SEPTA 21 Columbus-Dock to 69th St TC toward 69th St Transit Center
+    01:53 (+2d)–01:53 (+2d)   walk to 69th St TC South Berth 4
+                              wait 1h16m
+    03:10 (+2d)–04:09 (+2d)   SEPTA 113 Claymont TC to 69th St Transit Ctr toward Claymont Transit Center
+    04:09 (+2d)–04:20 (+2d)   walk to PHILADELPHIA PK @ OP ARCHMERE ACADEMY
+                              wait 10m
+    04:30 (+2d)–04:51 (+2d)   Dart First State 013 Philadelphia Pike / Market St toward 13 Wilm Trans Ctr
+    04:51 (+2d)–04:51 (+2d)   walk to 10TH ST @ KING ST (RODNEY SQUARE)
+                              wait 11m
+    05:02 (+2d)–05:50 (+2d)   Dart First State 006 Kirkwood Highway toward 6 Newark Hub
+    05:50 (+2d)–05:50 (+2d)   walk to Newark Transit Hub
+                              wait 59m
+    06:50 (+2d)–07:19 (+2d)   Cecil Transit New Newark
+                              wait 33m
+    07:52 (+2d)–08:49 (+2d)   Cecil Transit XC Cross-County Connection
+    08:49 (+2d)–08:50 (+2d)   walk to White Horse Apartments (Pulaski Hwy/US 40)
+                              wait 1h33m
+    10:24 (+2d)–10:43 (+2d)   Harford Transit LINK 5 Teal toward Outbound
+    10:43 (+2d)–10:52 (+2d)   walk to US 40 & PLATER ST wb
+                              wait 18h42m
+    05:35 (+3d)–06:40 (+3d)   Maryland Transit Administration 420 HAVRE DE GRACE - HOPKINS toward 420/1 JOHNS HOPKINS
+    06:40 (+3d)–06:46 (+3d)   walk to GREENE ST & PRATT ST sb
+                              wait 21m
+    07:07 (+3d)–07:29 (+3d)   Maryland Transit Administration 73 State Center - Patapsco Station toward WAGNER'S POINT
+    07:29 (+3d)–07:29 (+3d)   walk to ANNAPOLIS RD & VIRGINIA AVE fs sb
+                              wait 7m
+    07:37 (+3d)–08:36 (+3d)   Maryland Transit Administration 75 Patapsco Station - Arundel Mills toward ARUNDEL MILLS SHOPPING CENTER
+    08:36 (+3d)–08:36 (+3d)   walk to Arundel Mills Mall
+                              wait 23m
+    09:00 (+3d)–09:42 (+3d)   Regional Transportation Agency of Central Maryland 502 Laurel / Arundel Mills toward Towne Centre Laurel
+    09:42 (+3d)–09:45 (+3d)   walk to Baltimore Av+Contee Rd
+                              wait 21m
+    10:07 (+3d)–10:21 (+3d)   WMATA P12 Laurel-Greenbelt toward South to Greenbelt
+                              wait 31m
+    10:52 (+3d)–11:13 (+3d)   WMATA M44 Randolph Rd-Hyattsville Crossing toward East to Hyattsville Xing
+                              wait 6m
+    11:19 (+3d)–11:37 (+3d)   WMATA P1X Baltimore Av Limited toward South to Rhode Island Av
+    11:37 (+3d)–11:38 (+3d)   walk to 18 St NE+Hamlin St NE
+                              wait 31m
+    12:10 (+3d)–12:41 (+3d)   WMATA C71 18 St toward South to Union Station
+    12:41 (+3d)–12:43 (+3d)   walk to Washington Union Station
+  arrive Union Station 12:43 (+3d) (77h43m door to door)
+
+MOST LOCAL at the same weakest-link frequency — leaving South Station at 07:00:
+          07:00–07:01         walk to Essex St @ Atlantic Ave
+                              wait 10m
+          07:12–07:35         MBTA SL4 Nubian Station - South Station toward Nubian
+          07:35–07:35         walk to Nubian
+                              wait 7m
+          07:43–08:14         MBTA 23 Ashmont Station - Ruggles Station via Washington Street toward Ashmont
+          08:14–08:14         walk to Ashmont Station
+                              wait 15m
+          08:30–09:15         Brockton Area Transit Authority 12 Ashmont toward Brockton
+                              wait 15m
+          09:30–09:45         Brockton Area Transit Authority 9 Pearl via W Elm & Torrey toward Pearl Street / Torrey Street
+          09:45–09:46         walk to Belmont St at Stonehill College
+                              wait 33m
+          10:20–11:00         Brockton Area Transit Authority (BAT) GL Gateway Link toward Fall River - SRTA Terminal
+          11:00–11:00         walk to Taunton Terminal
+                              wait 1h24m
+          12:25–12:56         Greater Attleboro Taunton Regional Transit Authority 18 Taunton/Norton/Attleboro toward Attleboro T.C.
+                              wait 4m
+          13:00–13:24         Greater Attleboro Taunton Regional Transit Authority 16 Seekonk/Attleboro toward Market Basket
+          13:24–13:24         walk to South Attleboro (Bristol Place at Market Basket)
+                              wait 10m
+          13:35–14:12         Rhode Island Public Transit Authority 35 Rumford/Newport Ave toward Kennedy Plaza
+          14:12–14:17         walk to Exchange Terrace (Kennedy Plaza - Stop X)
+                              wait 2h29m
+          16:47–18:00         Rhode Island Public Transit Authority 95x Westerly Express toward Westerly
+          18:00–19:15         walk to I-95 Commuter Lot (CTDOT)
+                              wait 2h00m
+          21:16–21:55         Southeast Area Transit District 108 New London To Foxwoods Via Groton & Olde Mistick Village toward New London via Groton and Olde Mistick Village
+          21:55–21:55         walk to New London Train Station
+                              wait 10h04m
+    08:00 (+1d)–08:50 (+1d)   River Valley Transit 643 Old Saybrook - New London toward Old Saybrook Rt 1 & Shore Rd
+                              wait 10m
+    09:00 (+1d)–09:48 (+1d)   River Valley Transit 641 B Old Saybrook - Madison toward Madison Route 1
+    09:48 (+1d)–09:49 (+1d)   walk to Boston Post Rd @ Durham Rd
+                              wait 17m
+    10:06 (+1d)–11:04 (+1d)   CTTransit- New Haven 201 NEW HAVEN/MADISON toward 201 - New Haven
+    11:04 (+1d)–11:06 (+1d)   walk to Temple St @ Crown St
+                              wait 14m
+    11:21 (+1d)–12:01 (+1d)   CTTransit- New Haven 261 BOSTON POST RD toward 261 - CT Post Mall
+    12:01 (+1d)–12:01 (+1d)   walk to East Town Rd. at Westfield Ct Post Mall (Front Entry)
+                              wait 21m
+    12:23 (+1d)–14:15 (+1d)   Greater Bridgeport Transit CL Coastal Link toward NORWALK WHEELS HUB X
+    14:15 (+1d)–14:15 (+1d)   walk to Burnell Blvd @ opp River St
+                              wait 9m
+    14:25 (+1d)–15:11 (+1d)   CTTransit- Stamford 341 STAMFORD/NORWALK toward 341C - Stamford via CT State Norwalk
+    15:11 (+1d)–15:17 (+1d)   walk to Tresser Blvd @ Washington Blvd
+                              wait 6m
+    15:23 (+1d)–16:19 (+1d)   CTTransit- Stamford 311 STAMFORD/PORT CHESTER toward 311 - Port Chester via West Putnam Ave
+    16:19 (+1d)–16:19 (+1d)   walk to S MAIN ST @ WESTCHESTER AVE
+                              wait 8m
+    16:28 (+1d)–18:08 (+1d)   Bee-Line Bus 0061 61 -BRONX-NEW ROCHELLE-PORT CHESTER toward Fordham
+    18:08 (+1d)–18:10 (+1d)   walk to SOUTHERN BLVD/EAST FORDHAM RD
+                              wait 11m
+    18:22 (+1d)–19:13 (+1d)   MTA New York City Transit Bx19 NY Botanical Garden - Riverbank Park toward RIVERBANK PK via SOUTHERN BL via 149 ST
+    19:13 (+1d)–19:14 (+1d)   walk to MALCOLM X BLVD/W 145 ST
+                              wait 21m
+    19:35 (+1d)–20:32 (+1d)   MTA New York City Transit M7 Harlem - 14th Street toward 14 ST via COLUMBUS via 7 AV
+    20:32 (+1d)–20:37 (+1d)   walk to PORT AUTHORITY BUS TERMINAL
+                              wait 22m
+    21:00 (+1d)–22:27 (+1d)   NJ TRANSIT BUS 139 toward 139 LAKEWOOD VIA FREEHOLD CENTER/MALL
+                              wait 36m
+    23:03 (+1d)–00:38 (+2d)   NJ TRANSIT BUS 317 toward 317 PHILADELPHIA ROWAN COL
+    00:38 (+2d)–00:44 (+2d)   walk to MARTER AVE AT CENTERTON RD
+                              wait 4h49m
+    05:34 (+2d)–06:12 (+2d)   NJ TRANSIT BUS 407 toward 407 CAMDEN WRTC-Exact Fare
+    06:12 (+2d)–06:12 (+2d)   walk to BROADWAY IN FRONT OF WRTC
+                              wait 6m
+    06:19 (+2d)–06:33 (+2d)   NJ TRANSIT BUS 404 toward 404 PHILADELPHIA-Exact Fare
+    06:33 (+2d)–06:39 (+2d)   walk to Walnut St & 11th St
+                              wait 5m
+    06:44 (+2d)–07:19 (+2d)   SEPTA 21 Columbus-Dock to 69th St TC toward 69th St Transit Center
+    07:19 (+2d)–07:19 (+2d)   walk to 69th St TC South Berth 4
+                              wait 20m
+    07:40 (+2d)–08:59 (+2d)   SEPTA 113 Claymont TC to 69th St Transit Ctr toward Claymont Transit Center
+    08:59 (+2d)–09:06 (+2d)   walk to Naamans Rd @ Ridge Rd - WB
+                              wait 10m
+    09:16 (+2d)–09:57 (+2d)   Dart First State 013 Philadelphia Pike / Market St toward 13 Wilm Trans Ctr
+    09:57 (+2d)–09:57 (+2d)   walk to 10TH ST @ KING ST (RODNEY SQUARE)
+                              wait 6m
+    10:03 (+2d)–10:56 (+2d)   Dart First State 006 Kirkwood Highway toward 6 Newark Hub
+    10:56 (+2d)–10:56 (+2d)   walk to Newark Transit Hub
+                              wait 50m
+    11:47 (+2d)–12:16 (+2d)   Cecil Transit New Newark
+                              wait 1h19m
+    13:35 (+2d)–13:51 (+2d)   Cecil Transit XC Cross-County Connection
+    13:51 (+2d)–13:58 (+2d)   walk to Rt 40 - Across from Stony Run
+                              wait 15m
+    14:14 (+2d)–14:32 (+2d)   Cecil Transit XC Cross-County Connection
+    14:32 (+2d)–14:33 (+2d)   walk to White Horse Apartments (Pulaski Hwy/US 40)
+                              wait 18m
+    14:52 (+2d)–15:11 (+2d)   Harford Transit LINK 5 Teal toward Outbound
+    15:11 (+2d)–15:20 (+2d)   walk to US 40 & PLATER ST wb
+                              wait 14h14m
+    05:35 (+3d)–06:45 (+3d)   Maryland Transit Administration 420 HAVRE DE GRACE - HOPKINS toward 420/1 JOHNS HOPKINS
+    06:45 (+3d)–06:46 (+3d)   walk to FAYETTE ST PLAZA wb
+                              wait 8m
+    06:55 (+3d)–07:40 (+3d)   Maryland Transit Administration CityLink PURPLE City Hall - Paradise/Catonsville toward CATONSVILLE
+    07:40 (+3d)–07:40 (+3d)   walk to Walmart at Catonsville
+                              wait 19m
+    08:00 (+3d)–08:45 (+3d)   Regional Transportation Agency of Central Maryland 505 Columbia / Catonsville toward Mall in Columbia
+                              wait 15m
+    09:00 (+3d)–09:47 (+3d)   Regional Transportation Agency of Central Maryland 503 Laurel / Columbia toward Towne Centre Laurel
+    09:47 (+3d)–09:50 (+3d)   walk to Main St+6 St
+                              wait 5m
+    09:56 (+3d)–10:21 (+3d)   WMATA P12 Laurel-Greenbelt toward South to Greenbelt
+                              wait 31m
+    10:52 (+3d)–11:20 (+3d)   WMATA M44 Randolph Rd-Hyattsville Crossing toward East to Hyattsville Xing
+    11:20 (+3d)–11:20 (+3d)   walk to Hyattsville Crossing+Bus Bay F
+                              wait 20m
+    11:41 (+3d)–12:06 (+3d)   WMATA P33 Queens Chapel Rd toward South to Brookland
+    12:06 (+3d)–12:06 (+3d)   walk to Brookland-CUA+Bay J
+                              wait 13m
+    12:20 (+3d)–12:44 (+3d)   WMATA D30 N Capitol St toward South to Federal Triangle
+    12:44 (+3d)–12:48 (+3d)   walk to Washington Union Station
+  arrive Union Station 12:48 (+3d) (77h48m door to door)
+
+wrote out/walk/route.json and out/walk/route.geojson

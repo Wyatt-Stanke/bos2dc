@@ -18,9 +18,10 @@ Objective, in priority order:
 2. **Generalised cost** (minimise) among routes that achieve that
    bottleneck: in-vehicle time + `wait_factor` x effective headway per
    boarding + a boarding penalty + weighted walking + a per-mile penalty for
-   riding in the *city* and (larger) *express* stop-density classes. With the
-   penalties at zero and wait_factor = 0.5 this is the expected door-to-door
-   time of a traveller who shows up without consulting timetables.
+   each locality class: by road type (more lanes, then controlled access,
+   cost more) or by stop density (city, then express). With the penalties
+   at zero and wait_factor = 0.5 this is the expected door-to-door time of a
+   traveller who shows up without consulting timetables.
 
 A lexicographic (bottleneck, cost) label is not order-preserving under edge
 extension, so a single Dijkstra pass cannot optimise both; the two-phase
@@ -52,13 +53,25 @@ class CostParams:
     # express-over-city step is deliberately larger than city-over-local.
     city_penalty_s_per_mile: float = 60.0
     express_penalty_s_per_mile: float = 180.0
+    # Road-type preference, seconds per mile on roads with 1, 2, 3+ lanes in
+    # the bus's direction and on controlled-access roads. As with stop
+    # density, the step down to the least local class is the largest.
+    road_penalties_s_per_mile: tuple[float, ...] = (0.0, 60.0, 120.0, 240.0)
     flex_penalty_s_per_mile: float = 60.0  # on-demand zones count like city running
 
     @classmethod
     def most_local(cls, **kw) -> "CostParams":
-        """Localness dominates: ~5 min per city mile, ~15 min per express mile."""
+        """Localness dominates: 5 and 10 min per mile on 2- and 3+-lane roads,
+        20 on controlled access (stop density: 5 per city mile, 15 per express)."""
         return cls(city_penalty_s_per_mile=300.0, express_penalty_s_per_mile=900.0,
-                   flex_penalty_s_per_mile=300.0, **kw)
+                   road_penalties_s_per_mile=(0.0, 300.0, 600.0, 1200.0), flex_penalty_s_per_mile=300.0, **kw)
+
+    def class_penalties(self, class_names: tuple) -> np.ndarray:
+        from .roads import ROAD_CLASS_NAMES
+
+        if tuple(class_names) == ROAD_CLASS_NAMES:
+            return np.asarray(self.road_penalties_s_per_mile, float)
+        return np.array([0.0, self.city_penalty_s_per_mile, self.express_penalty_s_per_mile])
 
 
 @dataclass
@@ -70,7 +83,7 @@ class Leg:
     freq: float = 0.0  # effective departures per window (pooled for rides, equivalent for flex)
     headway_s: float = 0.0
     zone: int = -1  # index into Graph.zones for flex legs
-    miles: tuple[float, float, float] = (0.0, 0.0, 0.0)  # local / city / express
+    miles: tuple[float, ...] = (0.0, 0.0, 0.0)  # per locality class (Graph.class_names)
     dist_m: float = 0.0  # walks
 
 
@@ -99,13 +112,14 @@ class Route:
 
     @property
     def miles(self) -> np.ndarray:
-        """Miles by class: local, city, express, flex."""
-        out = np.zeros(4)
+        """Miles by locality class (Graph.class_names), then flex."""
+        K = max((len(l.miles) for l in self.legs if l.kind != "walk"), default=3)
+        out = np.zeros(K + 1)
         for l in self.legs:
             if l.kind == "ride":
-                out[:3] += l.miles
+                out[:K] += l.miles
             elif l.kind == "flex":
-                out[3] += sum(l.miles)
+                out[K] += sum(l.miles)
         return out
 
     @property
@@ -128,12 +142,12 @@ class Searcher:
         self.b_freq = np.round(np.concatenate([g.ride_freq, g.flex_freq]), 2)
         self.b_time = np.concatenate([g.ride_time, g.flex_time])
         flex_miles = g.flex_dist / METRES_PER_MILE
-        self.b_miles = np.vstack([g.ride_miles, np.column_stack([np.zeros(len(flex_miles)), flex_miles, np.zeros(len(flex_miles))])])
+        K = g.ride_miles.shape[1]
+        fm = np.zeros((len(flex_miles), K))
+        fm[:, 1] = flex_miles
+        self.b_miles = np.vstack([g.ride_miles, fm])
         headway = g.params.window_s / self.b_freq
-        class_pen = np.concatenate([
-            g.ride_miles[:, 1] * c.city_penalty_s_per_mile + g.ride_miles[:, 2] * c.express_penalty_s_per_mile,
-            flex_miles * c.flex_penalty_s_per_mile,
-        ])
+        class_pen = np.concatenate([g.ride_miles @ c.class_penalties(g.class_names), flex_miles * c.flex_penalty_s_per_mile])
         self.b_cost = self.b_time + c.wait_factor * headway + c.board_penalty_s + class_pen
         self.walk_cost = g.walk_time * np.where(g.walk_dist > c.long_walk_m, c.long_walk_factor, c.walk_factor)
         self.levels = np.unique(self.b_freq)

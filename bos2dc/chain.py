@@ -19,7 +19,7 @@ from scipy.sparse.csgraph import dijkstra
 from scipy.spatial import cKDTree
 
 from .geo import project
-from .graph import Graph, _aggregate, _pattern_pairs, _walk_seconds
+from .graph import CLASS_ABBREV, Graph, _aggregate, _pattern_pairs, _walk_seconds, pattern_cum_miles
 from .search import CostParams, Leg, Route
 
 
@@ -59,7 +59,8 @@ def evaluate_chain(g: Graph, steps: list[ChainStep], origin_xy, dest_xy, cost: C
             pat = g.feeds[fid].patterns[idx]
             if not step.matches(pat.agency, pat.route_name):
                 continue
-            res = _pattern_pairs(nodes, pat.board, pat.alight, pat.dep.astype(np.int64), pat.arr.astype(np.int64), xy, p)
+            res = _pattern_pairs(nodes, pat.board, pat.alight, pat.dep.astype(np.int64), pat.arr.astype(np.int64), xy, p,
+                                 pattern_cum_miles(g, fid, idx, nodes, xy))
             if res is not None:
                 chunks.append(res)
                 stops |= set(nodes.tolist())
@@ -78,9 +79,10 @@ def evaluate_chain(g: Graph, steps: list[ChainStep], origin_xy, dest_xy, cost: C
     size = K * n + 2
     eu, ev, ec, ekind = [], [], [], []  # kind: (layer, edge index) for rides, -1 walk
     info = {}
+    pen = cost.class_penalties(g.class_names)
     for k, (u, v, f, t, m) in enumerate(layer_edges):
         headway = p.window_s / np.round(f, 2)
-        c = t + cost.wait_factor * headway + cost.board_penalty_s + m[:, 1] * cost.city_penalty_s_per_mile + m[:, 2] * cost.express_penalty_s_per_mile
+        c = t + cost.wait_factor * headway + cost.board_penalty_s + m @ pen
         eu.append(u + k * n); ev.append(v + k * n); ec.append(c)
         ekind.append(np.column_stack([np.full(len(u), k), np.arange(len(u))]))
     walk_kind = []
@@ -153,16 +155,17 @@ def evaluate_chain(g: Graph, steps: list[ChainStep], origin_xy, dest_xy, cost: C
 
 
 def format_route(g: Graph, r: Route, steps: list[ChainStep] | None = None) -> list[str]:
-    """Leg-by-leg text with stop-density miles. With `steps`, ride legs are
-    labelled only with the chain's own routes."""
-    from .graph import CLASS_NAMES
+    """Leg-by-leg text with miles per locality class. With `steps`, ride legs
+    are labelled only with the chain's own routes."""
     from .itinerary import fmt_dur, serving_options
 
     N = g.nodes
+    K = len(g.class_names)
     m = r.miles
-    tot = m[:3].sum() or 1.0
+    tot = m[:K].sum() or 1.0
+    abbrev = [CLASS_ABBREV.get(n, n[:2]) for n in g.class_names]
     lines = [
-        "  " + " · ".join(f"{n} {v:.0f} mi ({100 * v / tot:.0f}%)" for n, v in zip(CLASS_NAMES, m[:3])) + f" · total {m[:3].sum():.0f} mi",
+        "  " + " · ".join(f"{n} {v:.0f} mi ({100 * v / tot:.0f}%)" for n, v in zip(g.class_names, m[:K])) + f" · total {m[:K].sum():.0f} mi",
         f"  {r.boardings} boardings · weakest eff. headway {fmt_dur(r.bottleneck_headway_s)} · in-vehicle {fmt_dur(r.in_vehicle_s)}"
         f" · expected wait {fmt_dur(r.expected_wait_s)} · walking {fmt_dur(r.walk_s)} (longest {r.longest_walk_m:.0f} m)",
     ]
@@ -178,6 +181,7 @@ def format_route(g: Graph, r: Route, steps: list[ChainStep] | None = None) -> li
             opts = [o for o in opts if step.matches(o.agency, o.route_name)] or opts
         k += 1
         names = "/".join(sorted({o.route_name for o in opts}))[:24]
+        cm = " ".join(f"{a} {x:4.1f}" for a, x in zip(abbrev, leg.miles))
         lines.append(f"     {names:24} {N.at[leg.u, 'name'][:34]:34} → {N.at[leg.v, 'name'][:34]:34} {sum(leg.miles):5.1f} mi ="
-                     f" L {leg.miles[0]:4.1f} C {leg.miles[1]:4.1f} E {leg.miles[2]:4.1f} · eff. headway {fmt_dur(leg.headway_s)} · {fmt_dur(leg.time_s)}")
+                     f" {cm} · eff. headway {fmt_dur(leg.headway_s)} · {fmt_dur(leg.time_s)}")
     return lines

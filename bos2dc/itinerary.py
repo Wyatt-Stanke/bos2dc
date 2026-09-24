@@ -18,7 +18,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from .geo import project
-from .graph import Graph, class_miles
+from .graph import Graph, pattern_cum_miles
 from .search import Route
 
 DAY = 86400
@@ -33,7 +33,7 @@ class RideOption:
     headsign: str
     dep: np.ndarray  # departures from boarding stop, seconds
     arr: np.ndarray  # arrivals at alighting stop (same trips)
-    miles: np.ndarray  # local / city / express miles between the two stops
+    miles: np.ndarray  # miles per locality class between the two stops
 
 
 @dataclass
@@ -46,7 +46,7 @@ class Step:
 
 def serving_options(g: Graph, u: int, v: int, cls: int | None = None) -> list[RideOption]:
     """Trip patterns that serve u -> v (optionally only those whose dominant
-    stop-density class on that segment is `cls`, matching how ride edges are
+    locality class on that segment is `cls`, matching how ride edges are
     pooled)."""
     xy = getattr(g, "_xy", None)
     if xy is None or len(xy) != g.n:
@@ -66,7 +66,7 @@ def serving_options(g: Graph, u: int, v: int, cls: int | None = None) -> list[Ri
             js = iv[(iv > i) & pat.alight[iv]]
             if len(js):
                 j = js[0]
-                cum = class_miles(nodes, pat.board, pat.alight, xy)
+                cum = pattern_cum_miles(g, feed_id, k, nodes, xy)
                 miles = cum[j] - cum[i]
                 if cls is None or int(np.argmax(miles)) == cls:
                     opts.append(RideOption(feed_id, k, pat.route_name, pat.agency, pat.headsign,

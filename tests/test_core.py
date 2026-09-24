@@ -17,24 +17,29 @@ def hms(sec):
     return f"{sec // 3600:02d}:{sec % 3600 // 60:02d}:{sec % 60:02d}"
 
 
-def make_feed(path, stops, routes, calendar_days="1,1,1,1,1,0,0", freq_rows=()):
-    """routes: {route_id: [(first_dep_s, [(stop_id, offset_s), ...]), ...]}"""
+def make_feed(path, stops, routes, calendar_days="1,1,1,1,1,0,0", freq_rows=(), shapes=None):
+    """routes: {route_id: [(first_dep_s, [(stop_id, offset_s), ...]), ...]}
+    shapes: {route_id: [(lat, lon), ...]} drawn for every trip of the route."""
     st_rows, trip_rows = [], []
+    shapes = shapes or {}
     for rid, trips in routes.items():
         for k, (t0, seq) in enumerate(trips):
             tid = f"{rid}_{k}"
-            trip_rows.append(f"{rid},WK,{tid},to end")
+            trip_rows.append(f"{rid},WK,{tid},to end,{'S' + rid if rid in shapes else ''}")
             for i, (sid, off) in enumerate(seq):
                 st_rows.append(f"{tid},{hms(t0 + off)},{hms(t0 + off)},{sid},{i + 1}")
     files = {
         "agency.txt": "agency_id,agency_name,agency_url,agency_timezone\nA,Test Agency " + path.stem + ",http://x,America/New_York\n",
         "stops.txt": "stop_id,stop_name,stop_lat,stop_lon\n" + "".join(f"{s},{n},{la},{lo}\n" for s, n, la, lo in stops),
         "routes.txt": "route_id,agency_id,route_short_name,route_long_name,route_type\n" + "".join(f"{r},A,{r},,3\n" for r in routes),
-        "trips.txt": "route_id,service_id,trip_id,trip_headsign\n" + "\n".join(trip_rows) + "\n",
+        "trips.txt": "route_id,service_id,trip_id,trip_headsign,shape_id\n" + "\n".join(trip_rows) + "\n",
         "stop_times.txt": "trip_id,arrival_time,departure_time,stop_id,stop_sequence\n" + "\n".join(st_rows) + "\n",
         "calendar.txt": "service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\n"
                         f"WK,{calendar_days},20260101,20261231\n",
     }
+    if shapes:
+        files["shapes.txt"] = "shape_id,shape_pt_lat,shape_pt_lon,shape_pt_sequence\n" + "".join(
+            f"S{rid},{la},{lo},{i}\n" for rid, pts in shapes.items() for i, (la, lo) in enumerate(pts))
     if freq_rows:
         files["frequencies.txt"] = "trip_id,start_time,end_time,headway_secs\n" + "".join(f"{t},{a},{b},{h}\n" for t, a, b, h in freq_rows)
     with zipfile.ZipFile(path, "w") as z:
