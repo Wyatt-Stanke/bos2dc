@@ -39,7 +39,14 @@ def _add_route_args(p: argparse.ArgumentParser) -> None:
     p.add_argument("--window", default="06:00-22:00", help="time window in which departures are counted")
     p.add_argument("--wait-factor", type=float, default=0.5, help="expected wait per boarding as a fraction of headway")
     p.add_argument("--board-penalty", type=float, default=5.0, help="minutes added per boarding")
-    p.add_argument("--walk-factor", type=float, default=1.5, help="weight of walking minutes relative to riding")
+    p.add_argument("--frontier", choices=("cost", "local"), default="cost",
+                   help="trade-offs at looser weakest links: re-optimise the cost (default) or find the most local route")
+    p.add_argument("--min-gain", type=float, default=5.0,
+                   help="percent: list a looser weakest link only if it cuts the cost by this much")
+    p.add_argument("--ride-factor", type=float, default=1.0, help="weight of in-vehicle minutes")
+    p.add_argument("--walk-factor", type=float, default=1.5, help="weight of walking minutes")
+    p.add_argument("--long-walk", type=float, default=1000.0, help="metres: walking beyond this is weighted by --long-walk-factor")
+    p.add_argument("--long-walk-factor", type=float, default=3.0, help="weight of walking minutes beyond --long-walk")
     p.add_argument("--walk-radius", type=float, default=400.0, help="metres: walk links between any two stops")
     p.add_argument("--gap-radius", type=float, default=2500.0, help="metres: walk links between different agencies")
     p.add_argument("--access-radius", type=float, default=800.0, help="metres: walk to/from the two stations")
@@ -57,7 +64,8 @@ def _add_route_args(p: argparse.ArgumentParser) -> None:
                    help="minutes added per mile on roads with 1, 2, 3+ lanes in the bus's direction and on controlled-access roads")
     p.add_argument("--city-penalty", type=float, default=1.0, help="--locality stops: minutes added per mile of city-density riding (2-4 stops/mi)")
     p.add_argument("--express-penalty", type=float, default=3.0, help="--locality stops: minutes added per mile of express riding (<2 stops/mi)")
-    p.add_argument("--itinerary", metavar="HH:MM", action="append", default=[], help="print a timed itinerary leaving at this time")
+    p.add_argument("--itinerary", metavar="HH:MM", action="append", default=[],
+                   help="print a timed itinerary leaving at this time ('best': each route's fastest connection)")
     p.add_argument("--out", type=Path, default=Path("out"), help="directory for route.json / route.geojson")
     p.add_argument("--workers", type=int, default=max(1, min(4, (os.cpu_count() or 2) - 1)))
 
@@ -117,8 +125,10 @@ def main(argv: list[str] | None = None) -> int:
         date=date,
         graph=GraphParams(window_start=w0, window_end=w1, walk_radius_m=args.walk_radius,
                           gap_radius_m=args.gap_radius, access_radius_m=args.access_radius,
-                          flex_headway_s=int(args.flex_headway * 60)),
-        cost=CostParams(wait_factor=args.wait_factor, board_penalty_s=args.board_penalty * 60, walk_factor=args.walk_factor,
+                          flex_headway_s=int(args.flex_headway * 60),
+                          max_gap_m=max(GraphParams.max_gap_m, (args.max_walk or 0) * 1000)),
+        cost=CostParams(wait_factor=args.wait_factor, board_penalty_s=args.board_penalty * 60, ride_factor=args.ride_factor,
+                        walk_factor=args.walk_factor, long_walk_m=args.long_walk, long_walk_factor=args.long_walk_factor,
                         city_penalty_s_per_mile=args.city_penalty * 60, express_penalty_s_per_mile=args.express_penalty * 60,
                         road_penalties_s_per_mile=_road_penalties(args.road_penalty)),
         max_walk_m=args.max_walk * 1000 if args.max_walk else None,
@@ -130,6 +140,8 @@ def main(argv: list[str] | None = None) -> int:
         use_flex=args.flex,
         flex_files=args.flex_zones,
         locality=args.locality,
+        frontier=args.frontier,
+        min_gain=args.min_gain / 100,
     )
     if args.cmd == "chain":
         return _chain(args, opts)
@@ -138,8 +150,14 @@ def main(argv: list[str] | None = None) -> int:
     print(report.text_report(res))
     for t in args.itinerary:
         for i in range(len(res.routes)):
+            if t == "best":
+                if not res.profiles[i]:
+                    continue
+                t0 = min(res.profiles[i], key=lambda c: c[1] - c[0])[0]
+            else:
+                t0 = _clock(t)
             print()
-            print(report.itinerary_text(res, i, _clock(t)))
+            print(report.itinerary_text(res, i, t0))
     report.write_outputs(res, args.out)
     print(f"\nwrote {args.out / 'route.json'} and {args.out / 'route.geojson'}", file=sys.stderr)
     return 0

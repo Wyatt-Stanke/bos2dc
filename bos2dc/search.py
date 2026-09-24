@@ -6,7 +6,11 @@ Objective, in priority order:
    agencies are normally limited to `gap_radius`. If that leaves Union
    Station unreachable, the smallest walking distance that connects the two
    networks is found (binary search over walk lengths) and walks up to that
-   length are allowed.
+   length are allowed. The limit applies to the whole walk between two
+   rides, however many walk links it strings together: the search tracks
+   the distance walked since the last ride (rounded up in steps of
+   `walk_radius`, coarser for limits above 24 steps), and the long-walk
+   weighting applies to that total too.
 
 1. **Bottleneck frequency** (maximise). A chain of buses is only as usable as
    its least frequent leg: that leg sets how many real departure
@@ -31,7 +35,7 @@ gives the Pareto frontier of (bottleneck headway, cost).
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 import numpy as np
 from scipy.sparse import csr_matrix
@@ -46,8 +50,9 @@ HEADWAY_LADDER_MIN = (10, 15, 20, 30, 40, 45, 60, 75, 90, 120, 150, 180, 240, 30
 class CostParams:
     wait_factor: float = 0.5
     board_penalty_s: float = 300.0
+    ride_factor: float = 1.0  # weight of in-vehicle minutes
     walk_factor: float = 1.5  # walking minutes weigh more than riding ones
-    long_walk_m: float = 1000.0  # walks beyond this are weighted by long_walk_factor
+    long_walk_m: float = 1000.0  # walking beyond this distance is weighted by long_walk_factor
     long_walk_factor: float = 3.0
     # Stop-density preference, seconds per mile ridden in each class. The
     # express-over-city step is deliberately larger than city-over-local.
@@ -61,10 +66,21 @@ class CostParams:
 
     @classmethod
     def most_local(cls, **kw) -> "CostParams":
+        return cls(**kw).as_most_local()
+
+    def as_most_local(self) -> "CostParams":
         """Localness dominates: 5 and 10 min per mile on 2- and 3+-lane roads,
         20 on controlled access (stop density: 5 per city mile, 15 per express)."""
-        return cls(city_penalty_s_per_mile=300.0, express_penalty_s_per_mile=900.0,
-                   road_penalties_s_per_mile=(0.0, 300.0, 600.0, 1200.0), flex_penalty_s_per_mile=300.0, **kw)
+        return replace(self, city_penalty_s_per_mile=300.0, express_penalty_s_per_mile=900.0,
+                       road_penalties_s_per_mile=(0.0, 300.0, 600.0, 1200.0), flex_penalty_s_per_mile=300.0)
+
+    def walk_cost(self, time_s, dist_m, start_m=0.0):
+        """Walking minutes weighted by walk_factor while the walk (which had
+        already covered start_m) is within long_walk_m, and by
+        long_walk_factor beyond it."""
+        dist_m = np.asarray(dist_m, float)
+        short = np.clip((self.long_walk_m - start_m) / np.maximum(dist_m, 1e-9), 0.0, 1.0)
+        return np.asarray(time_s, float) * (self.walk_factor * short + self.long_walk_factor * (1 - short))
 
     def class_penalties(self, class_names: tuple) -> np.ndarray:
         from .roads import ROAD_CLASS_NAMES
@@ -148,35 +164,69 @@ class Searcher:
         self.b_miles = np.vstack([g.ride_miles, fm])
         headway = g.params.window_s / self.b_freq
         class_pen = np.concatenate([g.ride_miles @ c.class_penalties(g.class_names), flex_miles * c.flex_penalty_s_per_mile])
-        self.b_cost = self.b_time + c.wait_factor * headway + c.board_penalty_s + class_pen
-        self.walk_cost = g.walk_time * np.where(g.walk_dist > c.long_walk_m, c.long_walk_factor, c.walk_factor)
+        self.b_cost = c.ride_factor * self.b_time + c.wait_factor * headway + c.board_penalty_s + class_pen
         self.levels = np.unique(self.b_freq)
+        # Walk links, one per (u, v) (the shortest).
+        order = np.lexsort((g.walk_dist, g.walk_u * g.n + g.walk_v))
+        wkey, first = np.unique((g.walk_u * g.n + g.walk_v)[order], return_index=True)
+        self.w_idx, self.w_key = order[first], wkey
+        self._layered: tuple[float, "_Layered"] | None = None
 
     # -- helpers -------------------------------------------------------------
 
-    def _edges(self, threshold: float, max_walk_m: float | None = None):
-        g = self.g
+    def _walks(self, max_walk_m: float | None = None) -> "_Layered":
+        """The walking graph for a walk limit, layered by distance walked
+        since the last ride. Node u appears in layers 0..L (that distance in
+        steps, rounded up; layer 0 is "just got off", or the origin) and in a
+        boarding layer L+1. Walk links go up the layers; every layer drops to the
+        boarding layer for free; rides go from the boarding layer to layer 0."""
         max_walk = self.max_walk_m if max_walk_m is None else max_walk_m
-        keep = self.b_freq >= threshold
-        wkeep = g.walk_dist <= max_walk
-        u = np.concatenate([self.b_u[keep], g.walk_u[wkeep]])
-        v = np.concatenate([self.b_v[keep], g.walk_v[wkeep]])
-        c = np.concatenate([self.b_cost[keep], self.walk_cost[wkeep]])
-        kind = np.concatenate([np.flatnonzero(keep), -1 - np.flatnonzero(wkeep)])
-        # csr_matrix sums duplicate entries; keep only the cheapest (u, v).
-        key = u * g.n + v
-        order = np.lexsort((c, key))
-        key, first = np.unique(key[order], return_index=True)
-        sel = order[first]
-        return u[sel], v[sel], np.maximum(c[sel], 1.0), kind[sel], key
+        if self._layered is not None and self._layered[0] == max_walk:
+            return self._layered[1]
+        g, c, N = self.g, self.cost, self.g.n
+        step = max(g.params.walk_radius_m, max_walk / 24)
+        L = int(np.ceil(max_walk / step))
+        w = self.w_idx[g.walk_dist[self.w_idx] <= max_walk]
+        d = g.walk_dist[w]
+        us, vs, cs = [], [], []
+        for b in range(L + 1):
+            ok = b * step + d <= max_walk
+            if not ok.any():
+                break
+            e, dd = w[ok], d[ok]
+            nb = np.ceil((b * step + dd) / step).astype(np.int64)
+            us.append(b * N + g.walk_u[e]); vs.append(nb * N + g.walk_v[e])
+            cs.append(np.maximum(c.walk_cost(g.walk_time[e], dd, start_m=b * step), 1.0))
+        board = np.unique(np.concatenate([self.b_u, [g.destination]]))
+        for b in range(L + 1):
+            us.append(b * N + board); vs.append((L + 1) * N + board); cs.append(np.full(len(board), 1e-3))
+        size = (L + 2) * N
+        m = csr_matrix((np.concatenate(cs), (np.concatenate(us), np.concatenate(vs))), shape=(size, size))
+        layered = _Layered(L, step, m)
+        if max_walk == self.max_walk_m:
+            self._layered = (max_walk, layered)
+        return layered
 
-    def _matrix(self, u, v, c):
-        return csr_matrix((c, (u, v)), shape=(self.g.n, self.g.n))
+    def _edges(self, threshold: float):
+        """Boardable edges at or above the threshold, the cheapest per (u, v)."""
+        keep = np.flatnonzero(self.b_freq >= threshold)
+        key = self.b_u[keep] * self.g.n + self.b_v[keep]
+        order = np.lexsort((self.b_cost[keep], key))
+        key, first = np.unique(key[order], return_index=True)
+        return keep[order[first]], key
+
+    def _matrix(self, threshold: float, max_walk_m: float | None = None):
+        lw = self._walks(max_walk_m)
+        sel, _ = self._edges(threshold)
+        N = self.g.n
+        rides = csr_matrix((np.maximum(self.b_cost[sel], 1.0), ((lw.L + 1) * N + self.b_u[sel], self.b_v[sel])),
+                           shape=lw.matrix.shape)
+        return lw, lw.matrix + rides
 
     def reachable(self, threshold: float, max_walk_m: float | None = None) -> bool:
-        u, v, c, _, _ = self._edges(threshold, max_walk_m)
-        order = breadth_first_order(self._matrix(u, v, c), self.g.origin, directed=True, return_predecessors=False)
-        return bool(np.isin(self.g.destination, order))
+        lw, m = self._matrix(threshold, max_walk_m)
+        order = breadth_first_order(m, self.g.origin, directed=True, return_predecessors=False)
+        return bool(np.isin((lw.L + 1) * self.g.n + self.g.destination, order))
 
     # -- phase 0: shortest longest walk --------------------------------------
 
@@ -217,33 +267,39 @@ class Searcher:
     # -- phase 2: min generalised cost under a threshold ---------------------
 
     def best_route(self, threshold: float) -> Route | None:
-        g = self.g
-        u, v, c, kind, key = self._edges(threshold)
-        dist, pred = dijkstra(self._matrix(u, v, c), directed=True, indices=g.origin, return_predecessors=True)
-        if not np.isfinite(dist[g.destination]):
+        g, N = self.g, self.g.n
+        lw, m = self._matrix(threshold)
+        sel, key = self._edges(threshold)
+        target = (lw.L + 1) * N + g.destination
+        dist, pred = dijkstra(m, directed=True, indices=g.origin, return_predecessors=True)
+        if not np.isfinite(dist[target]):
             return None
-        path = [g.destination]
+        path = [target]
         while path[-1] != g.origin:
             path.append(int(pred[path[-1]]))
         path.reverse()
         legs = []
         for a, b in zip(path[:-1], path[1:]):
-            e = kind[np.searchsorted(key, a * g.n + b)]
-            if e >= 0:
+            (la, u), (lb, v) = divmod(a, N), divmod(b, N)
+            if lb == lw.L + 1:
+                continue  # ready to board
+            if la == lw.L + 1:
+                e = int(sel[np.searchsorted(key, u * N + v)])
                 f = float(self.b_freq[e])
                 flex = e >= self.n_ride
-                legs.append(Leg("flex" if flex else "ride", a, b, float(self.b_time[e]), f, g.params.window_s / f,
+                legs.append(Leg("flex" if flex else "ride", u, v, float(self.b_time[e]), f, g.params.window_s / f,
                                 int(g.flex_zone[e - self.n_ride]) if flex else -1, tuple(float(x) for x in self.b_miles[e])))
             else:
-                w = -1 - e
-                legs.append(Leg("walk", a, b, float(g.walk_time[w]), dist_m=float(g.walk_dist[w])))
+                w = int(self.w_idx[np.searchsorted(self.w_key, u * N + v)])
+                legs.append(Leg("walk", u, v, float(g.walk_time[w]), dist_m=float(g.walk_dist[w])))
         legs = _merge_walks(legs)
+        path = [g.origin] + [l.v for l in legs]
         rides = [l for l in legs if l.kind != "walk"]
         return Route(
             threshold=threshold,
             nodes=path,
             legs=legs,
-            cost_s=float(dist[g.destination]),
+            cost_s=float(dist[target]),
             bottleneck_freq=min((l.freq for l in rides), default=0.0),
             in_vehicle_s=sum(l.time_s for l in rides),
             walk_s=sum(l.time_s for l in legs if l.kind == "walk"),
@@ -272,6 +328,13 @@ class Searcher:
                 continue
             out.append(r)
         return out
+
+
+@dataclass
+class _Layered:
+    L: int  # highest walk layer
+    step: float  # metres of walking per layer
+    matrix: csr_matrix  # walk links and boarding transitions
 
 
 def _merge_walks(legs: list[Leg]) -> list[Leg]:

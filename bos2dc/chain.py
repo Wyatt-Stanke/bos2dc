@@ -82,7 +82,7 @@ def evaluate_chain(g: Graph, steps: list[ChainStep], origin_xy, dest_xy, cost: C
     pen = cost.class_penalties(g.class_names)
     for k, (u, v, f, t, m) in enumerate(layer_edges):
         headway = p.window_s / np.round(f, 2)
-        c = t + cost.wait_factor * headway + cost.board_penalty_s + m @ pen
+        c = cost.ride_factor * t + cost.wait_factor * headway + cost.board_penalty_s + m @ pen
         eu.append(u + k * n); ev.append(v + k * n); ec.append(c)
         ekind.append(np.column_stack([np.full(len(u), k), np.arange(len(u))]))
     walk_kind = []
@@ -94,7 +94,7 @@ def evaluate_chain(g: Graph, steps: list[ChainStep], origin_xy, dest_xy, cost: C
         src = np.repeat(a, [len(l) for l in lists])
         dst = b[np.concatenate([np.array(l, dtype=np.int64) for l in lists])] if len(src) else np.zeros(0, np.int64)
         d = np.linalg.norm(xy[src] - xy[dst], axis=1)
-        eu.append(src + k * n); ev.append(dst + (k + 1) * n); ec.append(np.maximum(_walk_seconds(d, p) * cost.walk_factor, 1.0))
+        eu.append(src + k * n); ev.append(dst + (k + 1) * n); ec.append(np.maximum(cost.walk_cost(_walk_seconds(d, p), d), 1.0))
         walk_kind.append((src, dst, d))
         ekind.append(np.column_stack([np.full(len(src), -1 - k), np.arange(len(src))]))
     # Access and egress.
@@ -109,7 +109,7 @@ def evaluate_chain(g: Graph, steps: list[ChainStep], origin_xy, dest_xy, cost: C
             eu.append(np.full(len(nodes), O)); ev.append(nodes)
         else:
             eu.append(nodes); ev.append(np.full(len(nodes), D))
-        ec.append(np.maximum(_walk_seconds(dist, p) * cost.walk_factor, 1.0))
+        ec.append(np.maximum(cost.walk_cost(_walk_seconds(dist, p), dist), 1.0))
         tag = -100 if is_origin else -200
         ekind.append(np.column_stack([np.full(len(nodes), tag), np.arange(len(nodes))]))
         info[tag] = (s[near], dist)

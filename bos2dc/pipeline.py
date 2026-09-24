@@ -41,6 +41,10 @@ class Options:
     # "roads": locality by road type (OpenStreetMap, see roads.py);
     # "stops": by stop density.
     locality: str = "roads"
+    # Trade-offs along the headway ladder: "cost" re-optimises the main cost
+    # at each looser weakest link; "local" finds the most local route at each.
+    frontier: str = "cost"
+    min_gain: float = 0.05  # a looser rung is listed only if it cuts the cost by this fraction
 
 
 @dataclass
@@ -160,19 +164,40 @@ def run(opts: Options) -> Result:
     rec = s.best_route(best)
     rec.label = "RECOMMENDED: least frequent leg as frequent as possible (then prefer local stops)"
     routes.append(rec)
-    local = Searcher(g, CostParams.most_local(wait_factor=opts.cost.wait_factor, board_penalty_s=opts.cost.board_penalty_s,
-                                              walk_factor=opts.cost.walk_factor), max_walk)
+    local = Searcher(g, opts.cost.as_most_local(), max_walk)
+    if opts.frontier == "local":
+        front = local.frontier(best, opts.min_gain)
+        last = front[-1].threshold if front else None
+        for k, r in enumerate(front):
+            if any(r.nodes == x.nodes for x in routes):
+                continue
+            if r.threshold == best:
+                r.label = "MOST LOCAL at the same weakest-link frequency"
+            elif r.threshold == last:
+                r.label = "MOST LOCAL at any frequency"
+            else:
+                r.label = f"LOCAL TRADE-OFF {k}: most local with weakest link every ≤ {_hw_label(g.params.window_s / r.threshold)}"
+            routes.append(r)
+        return _finish(g, manifest, best, routes, max_walk, walk_note)
     for thr, label in ((best, "MOST LOCAL at the same weakest-link frequency"),
                        (float(local.levels[0]), "MOST LOCAL at any frequency")):
         r = local.best_route(thr)
         if r is not None and not any(r.nodes == x.nodes for x in routes):
             r.label = label
             routes.append(r)
-    for k, r in enumerate(s.frontier(best)[1:], start=1):
+    for k, r in enumerate(s.frontier(best, opts.min_gain)[1:], start=1):
         if not any(r.nodes == x.nodes for x in routes):
             r.label = f"TRADE-OFF {k}: weaker weakest link for a lower cost"
             routes.append(r)
+    return _finish(g, manifest, best, routes, max_walk, walk_note)
 
+
+def _hw_label(s: float) -> str:
+    h, m = divmod(int(round(s / 60)), 60)
+    return f"{h}h{m:02d}m" if h else f"{m}m"
+
+
+def _finish(g, manifest, best, routes, max_walk, walk_note) -> Result:
     sims, profiles = [], []
     for r in routes:
         sim = Simulator(g, r)

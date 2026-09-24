@@ -261,6 +261,25 @@ def test_required_walk(tmp_path):
     assert 2900 < r.longest_walk_m < 3100
 
 
+def test_walk_limit_covers_chained_walks(tmp_path):
+    # A stop of a third agency halfway along a 4.4 km gap: each half is
+    # within the 2.5 km limit, but walking through it is a 4.4 km walk.
+    f1 = make_feed(tmp_path / "a.zip", [("A1", "A1", 40.000, -75.0), ("A2", "A2", 40.050, -75.0)],
+                   {"R": every(6, 22, 30, [("A1", 0), ("A2", 600)])})
+    fm = make_feed(tmp_path / "m.zip", [("M1", "M1", 40.070, -75.0), ("M2", "M2", 40.070, -75.3)],
+                   {"X": every(6, 22, 30, [("M1", 0), ("M2", 900)])})
+    f2 = make_feed(tmp_path / "b.zip", [("B1", "B1", 40.090, -75.0), ("B2", "B2", 40.300, -75.0)],
+                   {"S": every(6, 22, 30, [("B1", 0), ("B2", 900)])})
+    feeds = [compile_feed(f, f.stem, f.stem, DAY) for f in (f1, fm, f2)]
+    g = attach_places(build_graph(feeds, GraphParams()), ORIGIN, DEST)
+    s = Searcher(g, max_walk_m=2500)
+    assert not s.reachable(float(s.levels[0]))
+    need = s.required_walk()
+    assert 4300 < need < 4600
+    r = Searcher(g, max_walk_m=need + 1).best_route(float(s.levels[0]))
+    assert 4300 < r.longest_walk_m <= need + 1
+
+
 def test_chain_evaluation(network):
     from bos2dc.chain import ChainStep, evaluate_chain
     from bos2dc.geo import project

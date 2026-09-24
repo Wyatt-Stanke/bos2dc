@@ -18,6 +18,7 @@ bos2dc roads                        # OpenStreetMap road index (~6.6 GB download
 bos2dc route                        # walk-bridged answer (no demand-response)
 bos2dc route --flex                 # also allow RIPTA Flex on-demand zones
 bos2dc route --itinerary 07:00      # plus a timed itinerary leaving at 07:00
+bos2dc route --itinerary best       # ... or at each route's fastest connection
 ```
 
 `route` prints a report and writes `out/route.json` and `out/route.geojson`.
@@ -30,7 +31,10 @@ Useful options:
 | `--locality roads` / `--locality stops` | judge how local a bus is by the road it drives on (default) or by its stop spacing |
 | `--road-penalty 0,1,2,4` | minutes added per mile on roads with 1, 2, 3+ lanes in the bus's direction, and on controlled-access roads |
 | `--city-penalty 1 --express-penalty 3` | with `--locality stops`: minutes added per mile at city / express stop density |
-| `--max-walk 3` | longest walk in km (default: 2.5 km, raised automatically if nothing connects) |
+| `--max-walk 3` | longest walk between two rides in km (default: 2.5 km, raised automatically if nothing connects) |
+| `--board-penalty 5 --wait-factor 0.5 --ride-factor 1` | cost of a boarding (minutes), of each minute of effective headway, and of each minute on board |
+| `--walk-factor 1.5 --long-walk 1000 --long-walk-factor 3` | weight of walking minutes, and of those beyond the first 1000 m of a walk |
+| `--frontier local --min-gain 1` | trade-offs: the most local route at each looser weakest link (default `cost`: the cheapest), listed if the cost drops by 1% |
 | `--no-auto-walk` | fail with a gap report instead of raising the walk limit |
 | `--flex --flex-headway 60` | allow Flex zones; treat on-demand service like a bus every 60 min |
 | `--exclude-agency REGEX`, `--exclude-feed ID` | drop services |
@@ -140,14 +144,17 @@ current producer URL returns 503.
    2–4, and **express** below 2.
 5. **Search.** The objectives are applied in order:
    1. **Shortest longest walk.** If nothing connects with 2.5 km walks, the
-      smallest walk limit that does is found by binary search.
+      smallest walk limit that does is found by binary search. The limit
+      covers the whole walk between two rides, however many walk links it
+      strings together: the search carries the distance walked since the
+      last ride, rounded up in 400 m steps (coarser for limits above 9.6 km).
    2. **Widest path.** Maximise the effective frequency of the least frequent
       leg, using binary search over frequency levels with a reachability test.
    3. **Generalised cost** among routes with that bottleneck:
-      * in-vehicle time;
+      * in-vehicle time × `--ride-factor` (1);
       * ½ × effective headway per boarding (the expected wait);
       * 5 minutes per boarding;
-      * walking time × 1.5 (× 3 beyond 1 km);
+      * walking time × 1.5, and × 3 beyond the first 1 km of each walk;
       * 1, 2 and 4 min per mile on 2-lane, 3+-lane and controlled-access
         roads (with `--locality stops`: 1 min per city mile and 3 per
         express mile).
@@ -160,10 +167,13 @@ current producer URL returns 503.
    * The recommended route.
    * The **most local** route, with penalties of 5, 10 and 20 min/mile
      (stop density: 5 and 15), at the same bottleneck and at any frequency.
-   * Trade-off routes that accept a weaker bottleneck for a lower cost.
+   * Trade-off routes that accept a weaker bottleneck for a lower cost. With
+     `--frontier local` these are the most local routes at each looser
+     weakest link instead, from the same bottleneck to any frequency.
 7. **Timetable check.** Every reported route is replayed against the real
    trips for departures across a day. This gives the distinct end-to-end
-   connections per day and the actual door-to-door time. `--itinerary` prints
+   connections per day and the actual door-to-door time. Staying on the same
+   bus across consecutive legs needs no transfer slack. `--itinerary` prints
    one of these replays in full.
 
 ## Known gaps in the data
@@ -203,4 +213,12 @@ current producer URL returns 503.
 The `results/` folder holds reports for Wednesday 30 September 2026, from
 `bos2dc route`, `bos2dc route --flex` and `bos2dc route --flex --max-walk 7.1`,
 classified by road type. Each run was also given `--itinerary 07:00`.
+`results/flex_most_local_5mi.txt` is the locality/walking frontier with Flex,
+walks up to 5 mi, and time and transfers nearly free:
+
+```sh
+bos2dc route --flex --max-walk 8.047 --board-penalty 0.5 --wait-factor 0.05 \
+    --ride-factor 0.1 --long-walk-factor 10 --frontier local --min-gain 1 --itinerary best
+```
+
 `results/stops/` has the same runs classified by stop density.

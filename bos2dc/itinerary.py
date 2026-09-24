@@ -96,6 +96,7 @@ class Simulator:
         return None
 
     def _ride(self, opts: list[RideOption], ready: int):
+        """Earliest arrival: (arrival, departure, option, trip row, day offset)."""
         best = None
         day = ready // DAY
         for o in opts:
@@ -108,34 +109,52 @@ class Simulator:
                 idx = np.flatnonzero(ok)
                 a = o.arr[idx] + off
                 m = int(np.argmin(a))
-                cand = (int(a[m]), int(o.dep[idx[m]] + off), o)
+                cand = (int(a[m]), int(o.dep[idx[m]] + off), o, int(idx[m]), off)
                 if best is None or cand[0] < best[0] or (cand[0] == best[0] and cand[1] > best[1]):
                     best = cand
                 break
         return best
 
+    @staticmethod
+    def _stay(opts: list[RideOption], on_board, t: int):
+        if on_board is None:
+            return None
+        fid, pat, row, off = on_board
+        for o in opts:
+            if o.feed_id == fid and o.pattern == pat and o.dep[row] + off >= t:
+                return int(o.arr[row] + off), int(o.dep[row] + off), o, row, off
+        return None
+
     def run(self, t0: int, detail: bool = False):
         t = t0
         steps: list[Step] = []
         rode = False
+        on_board = None  # (feed_id, pattern, trip row, day offset) of the bus just ridden
         for leg, opts in zip(self.route.legs, self.options):
             if leg.kind == "walk":
                 end = t + int(round(leg.time_s))
                 if detail:
                     steps.append(Step("walk", t, end, f"walk to {self.g.nodes.at[leg.v, 'name']}"))
                 t = end
+                on_board = None
                 continue
             if leg.kind == "flex":
                 res = self._flex(leg, t)
                 if res is None:
                     return None, steps
                 arr, dep = res
+                on_board = None
                 label = f"{self.g.zones[leg.zone].agency} {self.g.zones[leg.zone].name} (on demand) to {self.g.nodes.at[leg.v, 'name']}"
             else:
                 best = self._ride(opts, t + (self.slack if rode else 0))
+                # Staying on the same bus needs no transfer slack.
+                stay = self._stay(opts, on_board, t)
+                if stay is not None and (best is None or stay[0] <= best[0]):
+                    best = stay
                 if best is None:
                     return None, steps
-                arr, dep, o = best
+                arr, dep, o, row, off = best
+                on_board = (o.feed_id, o.pattern, row, off)
                 label = f"{o.agency} {o.route_name}" + (f" toward {o.headsign}" if o.headsign else "")
             if detail:
                 steps.append(Step("wait", t, dep, ""))
