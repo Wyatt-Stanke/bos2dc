@@ -123,7 +123,17 @@ current producer URL returns 503.
 * **Massachusetts → Connecticut inland.** PVTA and CTtransit meet at Enfield,
   but there are still walks of 4.4 km or more to get to Worcester, and 5.9 km
   from WRTA (Dudley) to NECTD (Thompson).
+* **Harford County → Baltimore.** The only direct link is MTA commuter bus
+  420, which runs only in the morning peak (effective headway ≈13 h). The
+  all-day alternative needs a 7 km walk from Edgewood (Harford LINK) to MTA
+  route 59 at Eastern Ave & Biscayne Bay Blvd.
 * **New Jersey.** No all-local chain exists between New York and Philadelphia:
   New Brunswick and Princeton aren't linked by public fixed routes. Every
   route therefore includes 70+ miles of express-density riding.
 * **Stop density** uses straight-line distances between consecutive stops.
+
+## Example results
+
+The `results/` folder holds reports for Wednesday 30 September 2026, from
+`bos2dc route`, `bos2dc route --flex` and `bos2dc route --flex --max-walk 7.1`.
+Each run was also given `--itinerary 07:00`.
